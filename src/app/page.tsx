@@ -20,7 +20,7 @@ export default function HomePage() {
       {/* Navbar */}
       <nav className="flex justify-between items-center px-6 py-4 shadow-md">
         <div className="flex items-center space-x-2">
-          <Image src="/logo.png" alt="EnatBet Logo" width={40} height={40} />
+          <Image src="/Logo.png" alt="EnatBet Logo" width={40} height={40} />
           <h1 className="font-bold text-xl">EnatBet</h1>
         </div>
         <div className="flex space-x-4">
