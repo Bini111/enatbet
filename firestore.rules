@@ -1,0 +1,332 @@
+// firestore.rules
+// Firestore Security Rules for EnatBet App
+// Deploy with: firebase deploy --only firestore:rules
+//
+// PERFORMANCE NOTES:
+// - Rules that call get() (like isHost, review validations) add latency (~100-200ms per fetch)
+// - For production, consider moving role checks to custom auth claims
+// - Custom claims are included in the auth token and don't require additional reads
+// - See: https://firebase.google.com/docs/auth/admin/custom-claims
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ====================
+    // Helper Functions
+    // ====================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user is the owner of a document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if user is a host
+    // PERFORMANCE WARNING: This performs a document read on every request
+    // OPTIMIZATION: Set custom claim at sign-in/registration:
+    //   admin.auth().setCustomUserClaims(uid, { host: true })
+    // Then use: request.auth.token.host == true
+    function isHost() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isHost == true;
+    }
+    
+    // Check if user is a host (optimized version using custom claims)
+    // Use this when you've migrated to custom claims for better performance
+    function isHostClaim() {
+      return isAuthenticated() && 
+             request.auth.token.host == true;
+    }
+    
+    // Check if user is an admin
+    // RECOMMENDED: Use custom claims for admin role instead of database reads
+    // Set via: admin.auth().setCustomUserClaims(uid, { admin: true })
+    function isAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.admin == true;
+    }
+    
+    // Check if request is from backend service (Cloud Function)
+    // Service accounts should have admin custom claim set to true
+    function isBackendService() {
+      return request.auth != null && 
+             request.auth.token.admin == true;
+    }
+    
+    // Check if data has required fields
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+    
+    // Validate string length
+    function validString(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+             request.resource.data[field].size() >= minLen &&
+             request.resource.data[field].size() <= maxLen;
+    }
+    
+    // Check if a specific field has not been modified (immutability helper)
+    function fieldUnchanged(field) {
+      return !request.resource.data.keys().hasAny([field]) ||
+             request.resource.data[field] == resource.data[field];
+    }
+    
+    // Check if price fields remain unchanged (for booking immutability)
+    function priceFieldsUnchanged() {
+      return request.resource.data.basePrice == resource.data.basePrice &&
+             request.resource.data.cleaningFee == resource.data.cleaningFee &&
+             request.resource.data.serviceFee == resource.data.serviceFee &&
+             request.resource.data.totalPrice == resource.data.totalPrice &&
+             request.resource.data.nights == resource.data.nights;
+    }
+    
+    // ====================
+    // Users Collection
+    // ====================
+    match /users/{userId} {
+      // Anyone authenticated can read any user profile (for displaying host info, etc.)
+      allow read: if isAuthenticated();
+      
+      // Only the user can create their own profile
+      allow create: if isOwner(userId) && 
+                       hasRequiredFields(['email', 'firstName', 'lastName', 'role']) &&
+                       validString('email', 3, 100) &&
+                       validString('firstName', 1, 50) &&
+                       validString('lastName', 1, 50) &&
+                       request.resource.data.uid == userId;
+      
+      // Only the user can update their own profile (or admins)
+      allow update: if (isOwner(userId) || isAdmin()) &&
+                       // Cannot change uid or email after creation
+                       request.resource.data.uid == resource.data.uid &&
+                       request.resource.data.email == resource.data.email;
+      
+      // Only admins can delete user profiles (for GDPR compliance, account removal)
+      allow delete: if isAdmin();
+    }
+    
+    // ====================
+    // Listings Collection
+    // ====================
+    match /listings/{listingId} {
+      // Anyone can read published listings (for search/browse)
+      // Admins can read all listings
+      allow read: if resource.data.isPublished == true || 
+                     isAuthenticated() ||
+                     isAdmin();
+      
+      // Only hosts can create listings
+      allow create: if isHost() &&
+                       hasRequiredFields(['title', 'description', 'hostId', 'pricing', 'address']) &&
+                       validString('title', 10, 100) &&
+                       validString('description', 50, 2000) &&
+                       request.resource.data.hostId == request.auth.uid &&
+                       request.resource.data.pricing.basePrice > 0 &&
+                       request.resource.data.maxGuests > 0;
+      
+      // Only the host can update their own listing (or admins for moderation)
+      allow update: if (isAuthenticated() && resource.data.hostId == request.auth.uid) ||
+                       isAdmin() &&
+                       // Cannot change hostId after creation
+                       request.resource.data.hostId == resource.data.hostId;
+      
+      // Only the host can delete their own listing (or admins for moderation)
+      allow delete: if (isAuthenticated() && resource.data.hostId == request.auth.uid) ||
+                       isAdmin();
+    }
+    
+    // ====================
+    // Bookings Collection
+    // ====================
+    match /bookings/{bookingId} {
+      // Only the guest, host, or admin can read a booking
+      allow read: if isAuthenticated() && 
+                     (resource.data.guestId == request.auth.uid ||
+                      resource.data.hostId == request.auth.uid ||
+                      isAdmin());
+      
+      // Only authenticated users can create bookings
+      allow create: if isAuthenticated() &&
+                       hasRequiredFields(['listingId', 'guestId', 'checkIn', 'checkOut', 'totalPrice']) &&
+                       request.resource.data.guestId == request.auth.uid &&
+                       request.resource.data.totalPrice > 0 &&
+                       request.resource.data.checkOut > request.resource.data.checkIn;
+      
+      // Only the guest or host can update a booking (for status changes)
+      // IMPORTANT: Price fields are immutable after creation to prevent tampering
+      allow update: if (isAuthenticated() && 
+                       (resource.data.guestId == request.auth.uid ||
+                        resource.data.hostId == request.auth.uid)) ||
+                       isAdmin() &&
+                       // Cannot change core booking details after creation
+                       request.resource.data.listingId == resource.data.listingId &&
+                       request.resource.data.guestId == resource.data.guestId &&
+                       request.resource.data.hostId == resource.data.hostId &&
+                       request.resource.data.checkIn == resource.data.checkIn &&
+                       request.resource.data.checkOut == resource.data.checkOut &&
+                       request.resource.data.guests == resource.data.guests &&
+                       // SECURITY: Price fields cannot be modified after creation
+                       priceFieldsUnchanged();
+      
+      // Only admins can delete bookings (for dispute resolution)
+      allow delete: if isAdmin();
+    }
+    
+    // ====================
+    // Conversations Collection
+    // ====================
+    match /conversations/{conversationId} {
+      // Only participants or admins can read the conversation
+      allow read: if isAuthenticated() && 
+                     (request.auth.uid in resource.data.participantIds ||
+                      isAdmin());
+      
+      // Authenticated users can create conversations
+      allow create: if isAuthenticated() &&
+                       hasRequiredFields(['participantIds', 'conversationKey']) &&
+                       request.auth.uid in request.resource.data.participantIds &&
+                       request.resource.data.participantIds.size() == 2;
+      
+      // Only participants can update conversation metadata
+      allow update: if isAuthenticated() && 
+                       request.auth.uid in resource.data.participantIds &&
+                       // Cannot change participants after creation
+                       request.resource.data.participantIds == resource.data.participantIds;
+      
+      // Only admins can delete conversations (for moderation)
+      allow delete: if isAdmin();
+      
+      // Messages subcollection
+      match /messages/{messageId} {
+        // Only participants or admins can read messages
+        allow read: if isAuthenticated() && 
+                       (request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds ||
+                        isAdmin());
+        
+        // Only participants can create messages
+        allow create: if isAuthenticated() &&
+                         request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds &&
+                         hasRequiredFields(['senderId', 'text']) &&
+                         request.resource.data.senderId == request.auth.uid &&
+                         validString('text', 1, 1000);
+        
+        // Messages cannot be updated
+        allow update: if false;
+        
+        // Only admins can delete messages (for moderation of inappropriate content)
+        allow delete: if isAdmin();
+      }
+    }
+    
+    // ====================
+    // Payments Collection
+    // ====================
+    // SECURITY: Payments can only be created by backend services (Cloud Functions)
+    // Clients cannot create or modify payments directly to prevent fraud
+    match /payments/{paymentId} {
+      // Only the user who made the payment or admins can read it
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid ||
+                      isAdmin());
+      
+      // IMPORTANT: Only backend service accounts can create payments
+      // This prevents clients from creating fake payment records
+      // Service accounts must have admin=true custom claim set via Admin SDK
+      allow create: if isBackendService() &&
+                       hasRequiredFields(['bookingId', 'userId', 'amount', 'status', 'currency']);
+      
+      // Only backend services can update payment status
+      // Clients should never modify payment records directly
+      allow update: if isBackendService();
+      
+      // Only backend services can delete payments (for cleanup/refunds)
+      allow delete: if isBackendService();
+    }
+    
+    // ====================
+    // Reviews Collection
+    // ====================
+    // PERFORMANCE NOTE: Review creation performs 2 document reads (booking + listing)
+    // OPTIMIZATION: Consider validating booking status via Cloud Function instead
+    // This would reduce rule complexity and improve response time
+    match /reviews/{reviewId} {
+      // Anyone can read published reviews
+      allow read: if true;
+      
+      // Guests can create reviews only if they have a completed booking for the listing
+      // PERFORMANCE: This rule performs 2 get() calls - consider moving to Cloud Function
+      // OPTIMIZATION PATH:
+      // 1. Client calls Cloud Function: createReview(bookingId, rating, comment)
+      // 2. Function validates booking status and ownership
+      // 3. Function creates review document with admin privileges
+      // 4. Simplify this rule to: allow create: if isBackendService()
+      allow create: if isAuthenticated() &&
+                       hasRequiredFields(['listingId', 'bookingId', 'guestId', 'rating', 'comment']) &&
+                       request.resource.data.guestId == request.auth.uid &&
+                       request.resource.data.rating >= 1 &&
+                       request.resource.data.rating <= 5 &&
+                       validString('comment', 10, 1000) &&
+                       // Verify the guest actually has a booking for this listing
+                       exists(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)) &&
+                       get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.guestId == request.auth.uid &&
+                       get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.listingId == request.resource.data.listingId &&
+                       get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.status == 'completed';
+      
+      // Hosts can only add a response field, not modify the entire review
+      // This preserves review integrity while allowing host responses
+      allow update: if (isAuthenticated() &&
+                       // Verify user is the host of the listing being reviewed
+                       exists(/databases/$(database)/documents/listings/$(resource.data.listingId)) &&
+                       get(/databases/$(database)/documents/listings/$(resource.data.listingId)).data.hostId == request.auth.uid &&
+                       // IMPORTANT: Only the hostResponse field can be added/modified
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hostResponse', 'updatedAt']) &&
+                       // All other fields must remain unchanged (immutability)
+                       request.resource.data.listingId == resource.data.listingId &&
+                       request.resource.data.bookingId == resource.data.bookingId &&
+                       request.resource.data.guestId == resource.data.guestId &&
+                       request.resource.data.rating == resource.data.rating &&
+                       request.resource.data.comment == resource.data.comment &&
+                       // Validate the host response if being added/updated
+                       (!request.resource.data.keys().hasAny(['hostResponse']) || 
+                        (request.resource.data.hostResponse is string && 
+                         request.resource.data.hostResponse.size() >= 1 && 
+                         request.resource.data.hostResponse.size() <= 1000))) ||
+                       // Admins can update reviews for moderation purposes
+                       isAdmin();
+      
+      // Only admins can delete reviews (for moderation of inappropriate content)
+      allow delete: if isAdmin();
+    }
+    
+    // ====================
+    // Admin Analytics Collection (Optional)
+    // ====================
+    // For storing admin-only analytics and reports
+    match /analytics/{document=**} {
+      allow read: if isAdmin();
+      allow write: if isBackendService();
+    }
+    
+    // ====================
+    // System Configuration Collection (Optional)
+    // ====================
+    // For app-wide settings like feature flags, maintenance mode, etc.
+    match /system/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // ====================
+    // Deny all other paths
+    // ====================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

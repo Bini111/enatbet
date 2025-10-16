@@ -1,0 +1,34 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Only allow authenticated users
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Profile images: users/{uid}/profile/*
+    match /users/{userId}/profile/{fileName} {
+      allow read: if true; // anyone can view profile pics
+      allow write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Listing images: listings/{listingId}/*
+    match /listings/{listingId}/{fileName} {
+      allow read: if true; // public listing images
+      allow write: if isSignedIn();
+    }
+
+    // Chat/message images: conversations/{conversationId}/{fileName}
+    match /conversations/{conversationId}/{fileName} {
+      allow read: if isSignedIn() && request.auth.uid in
+        get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+      allow write: if isSignedIn();
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
