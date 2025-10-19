@@ -144,7 +144,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
         ios: {
           deploymentTarget: '15.4',
-          useFrameworks: 'static',
+          useFrameworks: 'dynamic',
           useModernBuildSystem: true,
           newArchEnabled: false,
         },
