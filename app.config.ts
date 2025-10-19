@@ -14,18 +14,49 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     backgroundColor: '#FF385C',
   },
   assetBundlePatterns: ['**/*'],
+  scheme: ['com.enatbet.app', 'exp+enatbet-app'],
+  deepLinking: {
+    enabled: true,
+    prefixes: ['com.enatbet.app://', 'exp+enatbet-app://', 'https://enatbet.app'],
+    config: {
+      screens: {
+        '(auth)/login': 'auth/login',
+        '(auth)/signup': 'auth/signup',
+        '(auth)/reset-password': 'auth/reset-password',
+        '(app)/home': 'home',
+        '(app)/listing/:id': 'listing/:id',
+        '(app)/booking/:id': 'booking/:id',
+        '(app)/messages': 'messages',
+        '(app)/profile': 'profile',
+        notFound: '*',
+      },
+    },
+  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.enatbet.app',
-    buildNumber: '1.0.0',
+    buildNumber: '1',
+    deploymentTarget: '15.4',
+    usesNonExemptEncryption: false,
     infoPlist: {
       NSPhotoLibraryUsageDescription: 'Upload property photos',
       NSCameraUsageDescription: 'Take property photos',
       NSLocationWhenInUseUsageDescription: 'Show nearby properties',
-      NSCalendarsUsageDescription: 'Sync your bookings',
+      NSCalendarsFullAccessUsageDescription: 'Sync your bookings',
+      NSLocationAlwaysAndWhenInUseUsageDescription: 'Show nearby properties',
+      NSLocalNetworkUsageDescription: 'Connect to local network services',
+      NSBonjourServices: ['_http._tcp', '_https._tcp'],
+      NSPrivacyTracking: false,
+      NSPrivacyTrackingDomains: [],
     },
     config: {
       googleMapsApiKey: process.env.EXPO_PUBLIC_IOS_MAPS_KEY,
+      usesNonExemptEncryption: false,
+    },
+    associatedDomains: ['applinks:enatbet.app'],
+    entitlements: {
+      'aps-environment': 'production',
+      'com.apple.developer.associated-domains': ['applinks:enatbet.app'],
     },
   },
   android: {
@@ -35,12 +66,29 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     package: 'com.enatbet.app',
     versionCode: 1,
+    minSdkVersion: 24,
+    targetSdkVersion: 34,
+    intentFilters: [
+      {
+        action: 'android.intent.action.VIEW',
+        autoVerify: true,
+        data: [
+          {
+            scheme: 'https',
+            host: 'enatbet.app',
+            pathPrefix: '/',
+          },
+        ],
+        category: ['android.intent.category.DEFAULT', 'android.intent.category.BROWSABLE'],
+      },
+    ],
     permissions: [
       'ACCESS_FINE_LOCATION',
       'ACCESS_COARSE_LOCATION',
       'CAMERA',
       'READ_MEDIA_IMAGES',
       'NOTIFICATIONS',
+      'INTERNET',
     ],
     config: {
       googleMaps: {
@@ -67,6 +115,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'expo-location',
       {
         locationAlwaysAndWhenInUseUsageDescription: 'Show nearby properties',
+        isIosOnly: false,
       },
     ],
     [
@@ -79,6 +128,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'expo-notifications',
       {
         color: '#FF385C',
+        icon: './src/assets/images/notification-icon.png',
+        sounds: ['./src/assets/sounds/notification.wav'],
       },
     ],
     [
@@ -88,11 +139,23 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           compileSdkVersion: 34,
           targetSdkVersion: 34,
           buildToolsVersion: '34.0.0',
+          usesCleartextTraffic: false,
+          networkSecurityConfig: './android/network_security_config.xml',
         },
         ios: {
           deploymentTarget: '15.4',
           useFrameworks: 'static',
+          useModernBuildSystem: true,
+          newArchEnabled: false,
         },
+      },
+    ],
+    // Sentry plugin enabled (React Native / Expo)
+    [
+      'sentry-expo',
+      {
+        organization: 'enatbet',
+        project: 'enatbet-mobile',
       },
     ],
   ],
@@ -101,7 +164,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   updates: {
     enabled: true,
-    fallbackToCacheTimeout: 0,
+    checkAutomatically: 'ON_LOAD',
+    fallbackToCacheTimeout: 3000,
+    url: `https://updates.expo.dev/${process.env.EXPO_PUBLIC_EAS_PROJECT_ID}`,
   },
   extra: {
     eas: {

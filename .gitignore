@@ -1,5 +1,64 @@
+===== BEGIN FILE: .gitignore =====
+```
+# Dependencies
 node_modules/
-android/app/build/
-ios/Pods/
+npm-debug.log
+yarn-error.log
+
+# Expo
 .expo/
+.expo-shared/
+dist/
+
+# Build artifacts
+android/app/build/
+android/.gradle/
+android/build/
+ios/Pods/
+ios/Podfile.lock
+ios/*.xcworkspace/
+ios/*.xcodeproj/xcuserdata/
+ios/build/
+
+# Environment
 .env
+.env.local
+.env.*.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.jks
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.p8
+*.pem
+*.key
+google-services.json
+GoogleService-Info.plist
+
+# Certificates
+*.cer
+*.p12
+*.provisioning_profile
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Firebase
+.firebaserc
+
+# EAS Build Cache
+.eas/
+eas-build-hooks/
+```

@@ -3,399 +3,404 @@ import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 import * as sgMail from '@sendgrid/mail';
 
-// Initialize Admin SDK
+// Initialize services
 admin.initializeApp();
 const db = admin.firestore();
 
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// Initialize Stripe with error handling
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2024-11-20.acacia',
 });
 
 // Initialize SendGrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
-// Create Payment Intent for booking
-export const createPaymentIntent = functions.https.onCall(async (data, context) => {
-  // Validate user authentication
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+// ==========================================
+// Callable: Create Payment Intent
+// ==========================================
+export const createPaymentIntent = functions.https.onCall(
+  async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+    }
+
+    const { bookingId } = data;
+    if (!bookingId) {
+      throw new functions.https.HttpsError('invalid-argument', 'Booking ID is required');
+    }
+
+    try {
+      const bookingRef = db.collection('bookings').doc(bookingId);
+      const bookingDoc = await bookingRef.get();
+
+      if (!bookingDoc.exists) {
+        throw new functions.https.HttpsError('not-found', 'Booking not found');
+      }
+
+      const booking = bookingDoc.data()!;
+
+      // Verify user is guest
+      if (booking.guestId !== context.auth.uid) {
+        throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
+      }
+
+      // Create Stripe Payment Intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(booking.totalPrice * 100),
+        currency: booking.currency || 'usd',
+        metadata: {
+          bookingId,
+          guestId: booking.guestId,
+          hostId: booking.hostId,
+          listingId: booking.listingId,
+        },
+        automatic_payment_methods: { enabled: true },
+      });
+
+      // Update booking with payment intent
+      await bookingRef.update({
+        paymentIntentId: paymentIntent.id,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return {
+        success: true,
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+      };
+    } catch (error: any) {
+      functions.logger.error('Error creating payment intent:', error);
+      throw new functions.https.HttpsError(
+        'internal',
+        error.message || 'Failed to create payment intent'
+      );
+    }
+  }
+);
+
+// ==========================================
+// Callable: Create Ephemeral Key (for Stripe Customer Sheet)
+// ==========================================
+export const createEphemeralKey = functions.https.onCall(
+  async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+    }
+
+    const { customerId } = data;
+    if (!customerId) {
+      throw new functions.https.HttpsError('invalid-argument', 'Customer ID is required');
+    }
+
+    try {
+      const key = await stripe.ephemeralKeys.create(
+        { customer: customerId },
+        { apiVersion: '2024-11-20.acacia' }
+      );
+      return { success: true, ephemeralKey: key.secret };
+    } catch (error: any) {
+      functions.logger.error('Error creating ephemeral key:', error);
+      throw new functions.https.HttpsError(
+        'internal',
+        error.message || 'Failed to create ephemeral key'
+      );
+    }
+  }
+);
+
+// ==========================================
+// Webhook: Handle Stripe Payment Events
+// ==========================================
+export const stripeWebhook = functions.https.onRequest(
+  async (req, res) => {
+    const sig = req.headers['stripe-signature'] as string;
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      functions.logger.error('Webhook secret not configured');
+      return res.status(500).send('Webhook secret missing');
+    }
+
+    let event: Stripe.Event;
+    try {
+      event = stripe.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
+    } catch (err: any) {
+      functions.logger.error('Webhook verification failed:', err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    try {
+      switch (event.type) {
+        case 'payment_intent.succeeded':
+          await handlePaymentSuccess(event.data.object as Stripe.PaymentIntent);
+          break;
+
+        case 'payment_intent.payment_failed':
+          await handlePaymentFailed(event.data.object as Stripe.PaymentIntent);
+          break;
+
+        case 'charge.refunded':
+          await handleRefund(event.data.object as Stripe.Charge);
+          break;
+
+        default:
+          functions.logger.info(`Unhandled event type: ${event.type}`);
+      }
+
+      res.json({ received: true });
+    } catch (error: any) {
+      functions.logger.error('Webhook handler error:', error);
+      res.status(500).send('Webhook processing failed');
+    }
+  }
+);
+
+// ==========================================
+// Helper: Handle Payment Success
+// ==========================================
+async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
+  const bookingId = paymentIntent.metadata.bookingId;
+  const hostId = paymentIntent.metadata.hostId;
+
+  if (!bookingId || !hostId) {
+    throw new Error('Missing metadata in payment intent');
   }
 
-  const { bookingId } = data;
+  const bookingRef = db.collection('bookings').doc(bookingId);
+  const bookingDoc = await bookingRef.get();
 
-  if (!bookingId) {
-    throw new functions.https.HttpsError('invalid-argument', 'Booking ID is required');
+  if (!bookingDoc.exists) {
+    throw new Error(`Booking ${bookingId} not found`);
   }
 
+  const booking = bookingDoc.data()!;
+
+  // Update booking status
+  await bookingRef.update({
+    status: 'confirmed',
+    paymentStatus: 'paid',
+    stripePaymentIntentId: paymentIntent.id,
+    paidAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  // Create Stripe Connect transfer (host payout)
+  await createHostTransfer(hostId, booking, paymentIntent);
+
+  // Send notifications
+  await sendBookingConfirmationEmails(bookingId, booking);
+  await sendNotification(booking.guestId, 'Booking Confirmed', `Your booking is confirmed!`);
+  await sendNotification(hostId, 'New Booking', `You have a new booking!`);
+}
+
+// ==========================================
+// Helper: Handle Payment Failed
+// ==========================================
+async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
+  const bookingId = paymentIntent.metadata.bookingId;
+
+  if (!bookingId) return;
+
+  await db.collection('bookings').doc(bookingId).update({
+    status: 'payment_failed',
+    paymentStatus: 'failed',
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  const bookingDoc = await db.collection('bookings').doc(bookingId).get();
+  const booking = bookingDoc.data();
+
+  if (booking) {
+    await sendNotification(
+      booking.guestId,
+      'Payment Failed',
+      'Your payment failed. Please try again.'
+    );
+  }
+}
+
+// ==========================================
+// Helper: Handle Refund
+// ==========================================
+async function handleRefund(charge: Stripe.Charge) {
+  if (!charge.metadata.bookingId) return;
+
+  await db.collection('bookings').doc(charge.metadata.bookingId).update({
+    status: 'refunded',
+    paymentStatus: 'refunded',
+    refundedAmount: charge.amount_refunded / 100,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+// ==========================================
+// Helper: Create Stripe Connect Transfer
+// ==========================================
+async function createHostTransfer(
+  hostId: string,
+  booking: any,
+  paymentIntent: Stripe.PaymentIntent
+) {
   try {
-    // Get booking details
-    const bookingRef = db.collection('bookings').doc(bookingId);
-    const bookingDoc = await bookingRef.get();
+    // Get host's Stripe account
+    const hostDoc = await db.collection('users').doc(hostId).get();
+    const host = hostDoc.data();
 
-    if (!bookingDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'Booking not found');
+    if (!host?.stripeConnectId) {
+      functions.logger.warn(`Host ${hostId} missing Stripe Connect ID`);
+      return;
     }
 
-    const booking = bookingDoc.data()!;
+    // Calculate transfer amount (after platform fee, cleaning fee, etc.)
+    const platformFee = Math.round((booking.totalPrice * 0.1) * 100); // 10% platform fee
+    const transferAmount = paymentIntent.amount - platformFee;
 
-    // Verify the user is the guest
-    if (booking.guestId !== context.auth.uid) {
-      throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
-    }
-
-    // Create Stripe Payment Intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(booking.pricing.total * 100), // Convert to cents
-      currency: booking.pricing.currency.toLowerCase(),
+    // Create transfer to host
+    const transfer = await stripe.transfers.create({
+      amount: transferAmount,
+      currency: paymentIntent.currency,
+      destination: host.stripeConnectId,
       metadata: {
-        bookingId,
+        bookingId: booking.id,
         guestId: booking.guestId,
-        hostId: booking.hostId,
         listingId: booking.listingId,
       },
-      automatic_payment_methods: {
-        enabled: true,
-      },
     });
 
-    // Update booking with payment intent ID
-    await bookingRef.update({
-      paymentIntentId: paymentIntent.id,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    // Update booking with transfer info
+    await db.collection('bookings').doc(booking.id).update({
+      stripeTransferId: transfer.id,
+      hostPayout: transferAmount / 100,
+      platformFee: platformFee / 100,
     });
 
-    return {
-      clientSecret: paymentIntent.client_secret,
-      paymentIntentId: paymentIntent.id,
-    };
+    functions.logger.info(`Transfer created for host ${hostId}: ${transfer.id}`);
   } catch (error: any) {
-    console.error('Error creating payment intent:', error);
-    throw new functions.https.HttpsError('internal', 'Failed to create payment intent');
+    functions.logger.error('Error creating host transfer:', error);
   }
-});
+}
 
-// Handle Stripe webhook for payment success
-export const handlePaymentSuccess = functions.https.onRequest(async (req, res) => {
-  const sig = req.headers['stripe-signature'] as string;
-  let event: Stripe.Event;
-
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.rawBody,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
-  } catch (err: any) {
-    console.error('Webhook signature verification failed:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Handle the event
-  switch (event.type) {
-    case 'payment_intent.succeeded':
-      const paymentIntent = event.data.object as Stripe.PaymentIntent;
-      const bookingId = paymentIntent.metadata.bookingId;
-
-      if (!bookingId) {
-        console.error('No booking ID in payment intent metadata');
-        return res.status(400).send('Missing booking ID');
-      }
-
-      try {
-        // Update booking status to confirmed
-        const bookingRef = db.collection('bookings').doc(bookingId);
-        const bookingDoc = await bookingRef.get();
-
-        if (!bookingDoc.exists) {
-          console.error('Booking not found:', bookingId);
-          return res.status(404).send('Booking not found');
-        }
-
-        const booking = bookingDoc.data()!;
-
-        await bookingRef.update({
-          status: 'confirmed',
-          paidAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-
-        // Send confirmation emails
-        await sendBookingConfirmationEmails(bookingId, booking);
-
-        // Send push notifications
-        await sendBookingNotifications(booking.guestId, booking.hostId, bookingId);
-
-        console.log(`Payment successful for booking: ${bookingId}`);
-      } catch (error) {
-        console.error('Error processing successful payment:', error);
-        return res.status(500).send('Error processing payment');
-      }
-      break;
-
-    case 'payment_intent.payment_failed':
-      const failedPayment = event.data.object as Stripe.PaymentIntent;
-      const failedBookingId = failedPayment.metadata.bookingId;
-
-      if (failedBookingId) {
-        await db.collection('bookings').doc(failedBookingId).update({
-          status: 'payment_failed',
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      }
-      break;
-
-    default:
-      console.log(`Unhandled event type ${event.type}`);
-  }
-
-  res.json({ received: true });
-});
-
-// Send booking confirmation emails
+// ==========================================
+// Helper: Send Emails
+// ==========================================
 async function sendBookingConfirmationEmails(bookingId: string, booking: any) {
   try {
-    // Get listing details
-    const listingDoc = await db.collection('listings').doc(booking.listingId).get();
-    const listing = listingDoc.data()!;
-
-    // Get guest and host details
     const guestDoc = await db.collection('users').doc(booking.guestId).get();
     const hostDoc = await db.collection('users').doc(booking.hostId).get();
-    const guest = guestDoc.data()!;
-    const host = hostDoc.data()!;
+    const listingDoc = await db.collection('listings').doc(booking.listingId).get();
 
-    // Email to guest
+    const guest = guestDoc.data();
+    const host = hostDoc.data();
+    const listing = listingDoc.data();
+
+    if (!guest || !host || !listing || !process.env.SENDGRID_API_KEY) return;
+
+    const checkInDate = booking.checkIn?.toDate?.() || new Date(booking.checkIn);
+    const checkOutDate = booking.checkOut?.toDate?.() || new Date(booking.checkOut);
+
     const guestEmail = {
       to: guest.email,
       from: 'bookings@enatbet.app',
-      subject: 'Booking Confirmed - EnatBet',
+      subject: '✅ Booking Confirmed - Enatbet',
       html: `
         <h2>Your booking is confirmed!</h2>
-        <p>Hi ${guest.displayName},</p>
+        <p>Hi ${guest.displayName || guest.firstName},</p>
         <p>Your booking for <strong>${listing.title}</strong> has been confirmed.</p>
         <h3>Booking Details:</h3>
         <ul>
-          <li>Check-in: ${booking.checkIn.toDate().toLocaleDateString()}</li>
-          <li>Check-out: ${booking.checkOut.toDate().toLocaleDateString()}</li>
-          <li>Guests: ${booking.guests}</li>
-          <li>Total: ${booking.pricing.currency} ${booking.pricing.total}</li>
+          <li><strong>Check-in:</strong> ${checkInDate.toLocaleDateString()}</li>
+          <li><strong>Check-out:</strong> ${checkOutDate.toLocaleDateString()}</li>
+          <li><strong>Guests:</strong> ${booking.guests}</li>
+          <li><strong>Total Paid:</strong> ${booking.currency || 'USD'} ${(booking.totalPrice).toFixed(2)}</li>
         </ul>
-        <p>Host: ${host.displayName}</p>
-        <p>Address: ${listing.location.address}, ${listing.location.city}</p>
-        <p>You can message your host through the app.</p>
-        <p>Have a great stay!</p>
+        <p><strong>Host:</strong> ${host.displayName || host.firstName}</p>
+        <p>Open the app to message your host.</p>
       `,
     };
 
-    // Email to host
     const hostEmail = {
       to: host.email,
       from: 'bookings@enatbet.app',
-      subject: 'New Booking Confirmed - EnatBet',
+      subject: '📅 New Booking - Enatbet',
       html: `
         <h2>You have a new booking!</h2>
-        <p>Hi ${host.displayName},</p>
+        <p>Hi ${host.displayName || host.firstName},</p>
         <p>Your listing <strong>${listing.title}</strong> has been booked.</p>
         <h3>Booking Details:</h3>
         <ul>
-          <li>Guest: ${guest.displayName}</li>
-          <li>Check-in: ${booking.checkIn.toDate().toLocaleDateString()}</li>
-          <li>Check-out: ${booking.checkOut.toDate().toLocaleDateString()}</li>
-          <li>Number of guests: ${booking.guests}</li>
-          <li>Your earnings: ${booking.pricing.currency} ${booking.pricing.subtotal - booking.pricing.hostServiceFee}</li>
+          <li><strong>Guest:</strong> ${guest.displayName || guest.firstName}</li>
+          <li><strong>Check-in:</strong> ${checkInDate.toLocaleDateString()}</li>
+          <li><strong>Check-out:</strong> ${checkOutDate.toLocaleDateString()}</li>
+          <li><strong>Your Payout:</strong> ${booking.currency || 'USD'} ${(booking.totalPrice * 0.9).toFixed(2)}</li>
         </ul>
-        <p>Please prepare your space for your guest's arrival.</p>
-        <p>You can message your guest through the app.</p>
       `,
     };
 
-    await sgMail.send(guestEmail);
-    await sgMail.send(hostEmail);
-  } catch (error) {
-    console.error('Error sending emails:', error);
+    await sgMail.send([guestEmail, hostEmail]);
+    functions.logger.info(`Booking confirmation emails sent for ${bookingId}`);
+  } catch (error: any) {
+    functions.logger.error('Error sending booking emails:', error);
   }
 }
 
-// Send push notifications for booking
-async function sendBookingNotifications(guestId: string, hostId: string, bookingId: string) {
+// ==========================================
+// Helper: Send Push Notification
+// ==========================================
+async function sendNotification(userId: string, title: string, body: string) {
   try {
-    // Create notifications in Firestore
-    const batch = db.batch();
+    const userDoc = await db.collection('users').doc(userId).get();
+    const user = userDoc.data();
 
-    // Notification for guest
-    const guestNotif = db.collection('notifications').doc();
-    batch.set(guestNotif, {
-      userId: guestId,
-      type: 'booking_confirmed',
-      title: 'Booking Confirmed!',
-      body: 'Your booking has been confirmed. Check your email for details.',
-      data: { bookingId },
-      read: false,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    if (!user?.fcmToken) {
+      functions.logger.warn(`User ${userId} missing FCM token`);
+      return;
+    }
 
-    // Notification for host
-    const hostNotif = db.collection('notifications').doc();
-    batch.set(hostNotif, {
-      userId: hostId,
-      type: 'booking_confirmed',
-      title: 'New Booking!',
-      body: 'You have a new confirmed booking.',
-      data: { bookingId },
-      read: false,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    const message = {
+      notification: { title, body },
+      tokens: [user.fcmToken],
+    };
 
-    await batch.commit();
-
-    // TODO: Send actual push notifications using FCM tokens
-  } catch (error) {
-    console.error('Error sending notifications:', error);
+    const response = await admin.messaging().sendMulticast(message);
+    functions.logger.info(`Notification sent to ${userId}: ${response.successCount} success`);
+  } catch (error: any) {
+    functions.logger.error('Error sending notification:', error);
   }
 }
 
-// Calculate Superhost status (runs daily)
-export const calculateSuperhost = functions.pubsub
-  .schedule('every 24 hours')
-  .onRun(async (context) => {
-    try {
-      const usersSnapshot = await db.collection('users').where('isHost', '==', true).get();
-
-      for (const userDoc of usersSnapshot.docs) {
-        const userId = userDoc.id;
-        const user = userDoc.data();
-
-        // Get user's reviews
-        const reviewsSnapshot = await db
-          .collection('reviews')
-          .where('revieweeId', '==', userId)
-          .where('type', '==', 'guest_to_host')
-          .get();
-
-        if (reviewsSnapshot.size >= 10) {
-          let totalRating = 0;
-          reviewsSnapshot.forEach((review) => {
-            totalRating += review.data().rating.overall;
-          });
-
-          const averageRating = totalRating / reviewsSnapshot.size;
-
-          // Check Superhost criteria
-          const isSuperhost =
-            averageRating >= 4.8 &&
-            reviewsSnapshot.size >= 10 &&
-            user.stats?.responseRate >= 90;
-
-          // Update user
-          await userDoc.ref.update({
-            'stats.averageRating': averageRating,
-            'stats.totalReviews': reviewsSnapshot.size,
-            'badges.superhost': isSuperhost,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
-        }
-      }
-
-      console.log('Superhost calculation completed');
-    } catch (error) {
-      console.error('Error calculating Superhost status:', error);
-    }
-  });
-
-// Send booking reminder (runs daily)
-export const sendBookingReminder = functions.pubsub
-  .schedule('every 24 hours at 09:00')
+// ==========================================
+// Scheduled: Send Booking Reminders
+// ==========================================
+export const sendBookingReminders = functions.pubsub
+  .schedule('every day 09:00')
   .timeZone('America/New_York')
-  .onRun(async (context) => {
+  .onRun(async () => {
     try {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
+      const tomorrowStart = new Date(tomorrow.setHours(0, 0, 0, 0));
+      const tomorrowEnd = new Date(tomorrow.setHours(23, 59, 59, 999));
 
-      const dayAfter = new Date(tomorrow);
-      dayAfter.setDate(dayAfter.getDate() + 1);
-
-      // Find bookings with check-in tomorrow
-      const bookingsSnapshot = await db
+      const bookingsSnap = await db
         .collection('bookings')
         .where('status', '==', 'confirmed')
-        .where('checkIn', '>=', admin.firestore.Timestamp.fromDate(tomorrow))
-        .where('checkIn', '<', admin.firestore.Timestamp.fromDate(dayAfter))
+        .where('checkIn', '>=', tomorrowStart)
+        .where('checkIn', '<=', tomorrowEnd)
         .get();
 
-      for (const bookingDoc of bookingsSnapshot.docs) {
-        const booking = bookingDoc.data();
-        
-        // Send reminder emails
-        // TODO: Implement reminder email sending
-        
-        console.log(`Reminder sent for booking: ${bookingDoc.id}`);
+      for (const doc of bookingsSnap.docs) {
+        const booking = doc.data();
+        await sendNotification(
+          booking.guestId,
+          'Reminder: Check-in Tomorrow',
+          `Your check-in is tomorrow at ${booking.checkInTime || '3:00 PM'}`
+        );
       }
-    } catch (error) {
-      console.error('Error sending booking reminders:', error);
+
+      functions.logger.info(`Sent ${bookingsSnap.size} check-in reminders`);
+    } catch (error: any) {
+      functions.logger.error('Error sending booking reminders:', error);
     }
   });
-
-// Process refund
-export const processRefund = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
-  }
-
-  const { paymentIntentId, amount } = data;
-
-  try {
-    const refund = await stripe.refunds.create({
-      payment_intent: paymentIntentId,
-      amount: Math.round(amount * 100), // Convert to cents
-    });
-
-    return { success: true, refundId: refund.id };
-  } catch (error: any) {
-    console.error('Error processing refund:', error);
-    throw new functions.https.HttpsError('internal', 'Failed to process refund');
-  }
-});
-
-// Translate message
-export const translateMessage = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
-  }
-
-  const { text, targetLanguage } = data;
-
-  // TODO: Implement Google Cloud Translation API
-  // For now, return the original text
-  return { translatedText: text };
-});
-
-// Send notification
-export const sendNotification = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
-  }
-
-  const { userId, type, title, body, data: notificationData } = data;
-
-  try {
-    // Create notification in Firestore
-    await db.collection('notifications').add({
-      userId,
-      type,
-      title,
-      body,
-      data: notificationData,
-      read: false,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    // TODO: Send push notification via FCM
-
-    return { success: true };
-  } catch (error) {
-    console.error('Error sending notification:', error);
-    throw new functions.https.HttpsError('internal', 'Failed to send notification');
-  }
-});

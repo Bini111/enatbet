@@ -18,6 +18,19 @@ import { ErrorBoundary } from './src/components/common/ErrorBoundary';
 import { NotificationProvider } from './src/contexts/NotificationProvider';
 import { analytics } from './src/utils/analytics';
 
+// --- Sentry (added) ---
+import * as Sentry from 'sentry-expo';
+import Constants from 'expo-constants';
+
+Sentry.init({
+  dsn: Constants.expoConfig?.extra?.sentryDsn,
+  enableInExpoDevelopment: true,
+  debug: false,
+  tracesSampleRate: 0.15,
+  enableAutoSessionTracking: true,
+});
+// --- end Sentry ---
+
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 

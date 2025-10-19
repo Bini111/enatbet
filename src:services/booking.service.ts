@@ -10,6 +10,7 @@ import {
   orderBy,
   serverTimestamp,
   Timestamp,
+  runTransaction,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions, collections, getErrorMessage } from '../config/firebase';
@@ -18,79 +19,100 @@ import listingService from './listing.service';
 import notificationService from './notification.service';
 
 class BookingService {
-  // Create a booking request
+  // Create a booking request with transaction to prevent race conditions
   async createBooking(data: BookingFormData, guestId: string): Promise<string> {
     try {
-      // Get listing details
-      const listing = await listingService.getListingById(data.listingId);
-      
-      if (!listing) {
-        throw new Error('Listing not found');
-      }
-
-      // Check availability
-      const isAvailable = await listingService.checkAvailability(
-        data.listingId,
-        data.checkIn,
-        data.checkOut
-      );
-
-      if (!isAvailable) {
-        throw new Error('These dates are not available');
-      }
-
-      // Calculate pricing
-      const nights = Math.ceil(
-        (data.checkOut.getTime() - data.checkIn.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      
-      const subtotal = listing.pricing.nightly * nights;
-      const cleaningFee = listing.pricing.cleaning;
-      const hostServiceFee = subtotal * 0.03; // 3%
-      const guestServiceFee = subtotal * 0.14; // 14%
-      const total = subtotal + cleaningFee + guestServiceFee;
-
-      // Create booking document
-      const bookingRef = doc(collection(db, collections.bookings));
-      
-      const booking = {
-        listingId: data.listingId,
-        hostId: listing.hostId,
-        guestId,
-        checkIn: Timestamp.fromDate(data.checkIn),
-        checkOut: Timestamp.fromDate(data.checkOut),
-        guests: data.guests,
-        pricing: {
-          nightly: listing.pricing.nightly,
-          nights,
-          subtotal,
-          cleaningFee,
-          hostServiceFee,
-          guestServiceFee,
-          total,
-          currency: listing.pricing.currency,
-        },
-        status: listing.availability.instantBook ? 'confirmed' : 'pending',
-        specialRequests: data.specialRequests || '',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      await setDoc(bookingRef, booking);
-
-      // Send notification to host
-      await notificationService.sendNotification(
-        listing.hostId,
-        'booking_request',
-        'New Booking Request',
-        `You have a new booking request for ${listing.title}`,
-        {
-          bookingId: bookingRef.id,
-          listingId: data.listingId,
+      return await runTransaction(db, async (transaction) => {
+        // Get listing with transaction
+        const listingRef = doc(db, collections.listings, data.listingId);
+        const listingDoc = await transaction.get(listingRef);
+        
+        if (!listingDoc.exists()) {
+          throw new Error('Listing not found');
         }
-      );
-
-      return bookingRef.id;
+        
+        const listing = listingDoc.data() as Listing;
+        
+        // Check for overlapping bookings IN THE TRANSACTION
+        const bookingsRef = collection(db, collections.bookings);
+        const overlappingQuery = query(
+          bookingsRef,
+          where('listingId', '==', data.listingId),
+          where('status', 'in', ['pending', 'confirmed']),
+          where('checkIn', '<', Timestamp.fromDate(data.checkOut)),
+          where('checkOut', '>', Timestamp.fromDate(data.checkIn))
+        );
+        
+        const overlappingBookings = await getDocs(overlappingQuery);
+        
+        if (!overlappingBookings.empty) {
+          throw new Error('These dates are no longer available');
+        }
+        
+        // Calculate pricing
+        const nights = Math.ceil(
+          (data.checkOut.getTime() - data.checkIn.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        
+        const subtotal = listing.pricing.nightly * nights;
+        const cleaningFee = listing.pricing.cleaning;
+        const hostServiceFee = subtotal * 0.03; // 3%
+        const guestServiceFee = subtotal * 0.14; // 14%
+        const total = subtotal + cleaningFee + guestServiceFee;
+        
+        // Create booking atomically
+        const bookingRef = doc(collection(db, collections.bookings));
+        const booking = {
+          listingId: data.listingId,
+          hostId: listing.hostId,
+          guestId,
+          checkIn: Timestamp.fromDate(data.checkIn),
+          checkOut: Timestamp.fromDate(data.checkOut),
+          guests: data.guests,
+          pricing: {
+            nightly: listing.pricing.nightly,
+            nights,
+            subtotal,
+            cleaningFee,
+            hostServiceFee,
+            guestServiceFee,
+            total,
+            currency: listing.pricing.currency,
+          },
+          status: listing.availability.instantBook ? 'confirmed' : 'pending',
+          specialRequests: data.specialRequests || '',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+        
+        transaction.set(bookingRef, booking);
+        
+        // Note: Notification sending moved outside transaction
+        // Transactions should only contain Firestore operations
+        const bookingId = bookingRef.id;
+        
+        // Send notification after transaction completes
+        // This will happen after the transaction.set() completes successfully
+        Promise.resolve().then(async () => {
+          try {
+            await notificationService.sendNotification(
+              listing.hostId,
+              'booking_request',
+              'New Booking Request',
+              `You have a new booking request for ${listing.title}`,
+              {
+                bookingId,
+                listingId: data.listingId,
+              }
+            );
+          } catch (error) {
+            console.error('Error sending notification:', error);
+            // Don't throw - notification failure shouldn't fail the booking
+          }
+        });
+        
+        return bookingId;
+      });
     } catch (error) {
       throw new Error(getErrorMessage(error));
     }

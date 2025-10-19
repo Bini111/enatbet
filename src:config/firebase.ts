@@ -1,34 +1,41 @@
-import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  initializeAuth,
-  getReactNativePersistence 
-} from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-import { getFunctions } from 'firebase/functions';
-import { getAnalytics, isSupported } from 'firebase/analytics';
+import { initializeApp } from '@react-native-firebase/app';
+import { getAuth, initializeAuth, getReactNativePersistence } from '@react-native-firebase/auth';
+import { getFirestore } from '@react-native-firebase/firestore';
+import { getStorage } from '@react-native-firebase/storage';
+import { getFunctions } from '@react-native-firebase/functions';
+import { getAnalytics } from '@react-native-firebase/analytics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
-  apiKey: Constants.expoConfig?.extra?.FIREBASE_API_KEY || process.env.FIREBASE_API_KEY,
-  authDomain: Constants.expoConfig?.extra?.FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: Constants.expoConfig?.extra?.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
-  storageBucket: Constants.expoConfig?.extra?.FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: Constants.expoConfig?.extra?.FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: Constants.expoConfig?.extra?.FIREBASE_APP_ID || process.env.FIREBASE_APP_ID,
-  measurementId: Constants.expoConfig?.extra?.FIREBASE_MEASUREMENT_ID || process.env.FIREBASE_MEASUREMENT_ID,
+  apiKey: Constants.expoConfig?.extra?.FIREBASE_API_KEY || process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: Constants.expoConfig?.extra?.FIREBASE_AUTH_DOMAIN || process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: Constants.expoConfig?.extra?.FIREBASE_PROJECT_ID || process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: Constants.expoConfig?.extra?.FIREBASE_STORAGE_BUCKET || process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: Constants.expoConfig?.extra?.FIREBASE_MESSAGING_SENDER_ID || process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: Constants.expoConfig?.extra?.FIREBASE_APP_ID || process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  measurementId: Constants.expoConfig?.extra?.FIREBASE_MEASUREMENT_ID || process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app: any;
+try {
+  app = initializeApp(firebaseConfig);
+} catch (error) {
+  console.error('Failed to initialize Firebase:', error);
+}
 
 // Initialize Firebase Auth with persistence
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage)
-});
+let auth: any;
+try {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+} catch (error) {
+  console.warn('Firebase Auth already initialized');
+  auth = getAuth(app);
+}
 
 // Initialize Firestore
 const db = getFirestore(app);
@@ -39,24 +46,13 @@ const storage = getStorage(app);
 // Initialize Functions
 const functions = getFunctions(app);
 
-// Initialize Analytics (only on supported platforms)
+// Initialize Analytics (optional)
 let analytics: any = null;
-if (typeof window !== 'undefined') {
-  isSupported().then(supported => {
-    if (supported) {
-      analytics = getAnalytics(app);
-    }
-  });
+try {
+  analytics = getAnalytics(app);
+} catch (error) {
+  console.warn('Analytics not available');
 }
-
-// Enable Firestore offline persistence
-// enableNetwork(db);
-
-// Firestore Settings
-const firestoreSettings = {
-  experimentalForceLongPolling: false,
-  useFetchStreams: true,
-};
 
 // Collection references
 export const collections = {
@@ -88,8 +84,6 @@ export const functionNames = {
   translateMessage: 'translateMessage',
   calculateSuperhost: 'calculateSuperhost',
   sendBookingReminder: 'sendBookingReminder',
-  approveListingContent: 'approveListingContent',
-  flagInappropriateContent: 'flagInappropriateContent',
 };
 
 // Helper function to get timestamp
@@ -101,22 +95,19 @@ export const getTimestamp = () => {
 export const formatFirebaseTimestamp = (timestamp: any): Date => {
   if (!timestamp) return new Date();
   
-  // Handle Firestore Timestamp
   if (timestamp.toDate && typeof timestamp.toDate === 'function') {
     return timestamp.toDate();
   }
   
-  // Handle JavaScript Date
   if (timestamp instanceof Date) {
     return timestamp;
   }
   
-  // Handle string or number timestamp
   return new Date(timestamp);
 };
 
 // Error messages
-export const firebaseErrors = {
+export const firebaseErrors: { [key: string]: string } = {
   'auth/email-already-in-use': 'This email is already registered. Please sign in instead.',
   'auth/invalid-email': 'Please enter a valid email address.',
   'auth/operation-not-allowed': 'This operation is not allowed. Please contact support.',
@@ -147,7 +138,7 @@ export const firebaseErrors = {
 // Get user-friendly error message
 export const getErrorMessage = (error: any): string => {
   const code = error?.code || error?.message || 'unknown-error';
-  return firebaseErrors[code as keyof typeof firebaseErrors] || 'An unexpected error occurred. Please try again.';
+  return firebaseErrors[code] || 'An unexpected error occurred. Please try again.';
 };
 
 // Export initialized services

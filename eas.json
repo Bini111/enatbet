@@ -1,23 +1,63 @@
 {
   "cli": {
-    "version": ">= 13.2.0"
+    "version": ">= 14.0.0"
   },
   "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "channel": "development",
       "ios": {
-        "simulator": true
+        "simulator": false,
+        "enterpriseProvisioning": "adhoc"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development"
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "preview",
+      "ios": {
+        "enterpriseProvisioning": "adhoc"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "staging"
+      }
+    },
+    "staging": {
+      "distribution": "internal",
+      "channel": "staging",
+      "submitProfile": "staging",
+      "ios": {
+        "enterpriseProvisioning": "adhoc"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "staging"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "channel": "production",
+      "submitProfile": "production",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production"
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": 0
+      }
+    },
+    "staging": {
+      "ios": {
+        "ascAppId": 0
+      }
+    }
   }
 }

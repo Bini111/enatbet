@@ -1,0 +1,42 @@
+{
+  "parameters": {
+    "minAppVersion": {
+      "description": "Minimum app version required",
+      "valueType": "STRING",
+      "defaultValue": {
+        "value": "1.0.0"
+      }
+    },
+    "maintenanceMode": {
+      "description": "Enable maintenance mode",
+      "valueType": "BOOLEAN",
+      "defaultValue": {
+        "value": false
+      }
+    },
+    "stripePublishableKey": {
+      "description": "Stripe publishable key for client",
+      "valueType": "STRING",
+      "defaultValue": {
+        "value": "pk_test_YOUR_KEY"
+      }
+    },
+    "maxListingPrice": {
+      "description": "Maximum listing price allowed",
+      "valueType": "NUMBER",
+      "defaultValue": {
+        "value": 9999.99
+      }
+    }
+  },
+  "conditions": [
+    {
+      "name": "ios",
+      "expression": "device.os == 'ios'"
+    },
+    {
+      "name": "android",
+      "expression": "device.os == 'android'"
+    }
+  ]
+}

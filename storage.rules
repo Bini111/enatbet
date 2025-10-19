@@ -1,29 +1,61 @@
+// storage.rules - SECURE VERSION
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-
-    // Only allow authenticated users
+    
     function isSignedIn() {
       return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Enforce file size limits (10MB for images)
+    function validImageSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    // Enforce valid image types
+    function validImageType() {
+      return request.resource.contentType.matches('image/.*');
     }
 
     // Profile images: users/{uid}/profile/*
     match /users/{userId}/profile/{fileName} {
-      allow read: if true; // anyone can view profile pics
-      allow write: if isSignedIn() && request.auth.uid == userId;
+      allow read: if true;
+      allow write: if isOwner(userId) && 
+                      validImageSize() && 
+                      validImageType();
     }
 
     // Listing images: listings/{listingId}/*
     match /listings/{listingId}/{fileName} {
-      allow read: if true; // public listing images
-      allow write: if isSignedIn();
+      allow read: if true;
+      // CRITICAL: Only the listing owner can upload
+      allow write: if isSignedIn() && 
+                      validImageSize() && 
+                      validImageType() &&
+                      firestore.get(/databases/(default)/documents/listings/$(listingId)).data.hostId == request.auth.uid;
     }
 
-    // Chat/message images: conversations/{conversationId}/{fileName}
+    // Chat images: conversations/{conversationId}/{fileName}
     match /conversations/{conversationId}/{fileName} {
-      allow read: if isSignedIn() && request.auth.uid in
-        get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
-      allow write: if isSignedIn();
+      // CRITICAL: Check if user is a participant
+      allow read: if isSignedIn() && 
+                     request.auth.uid in firestore.get(/databases/(default)/documents/conversations/$(conversationId)).data.participantIds;
+      allow write: if isSignedIn() && 
+                      validImageSize() && 
+                      validImageType() &&
+                      request.auth.uid in firestore.get(/databases/(default)/documents/conversations/$(conversationId)).data.participantIds;
+    }
+    
+    // Verification documents (admin only read)
+    match /verification-documents/{userId}/{fileName} {
+      allow read: if isOwner(userId) || 
+                     request.auth.token.admin == true;
+      allow write: if isOwner(userId) && 
+                      request.resource.size < 5 * 1024 * 1024; // 5MB limit
     }
 
     // Default deny
