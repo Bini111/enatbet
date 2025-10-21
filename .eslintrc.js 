@@ -1,38 +1,93 @@
-{
-  "extends": [
-    "expo",
-    "plugin:@typescript-eslint/recommended",
-    "prettier"
+module.exports = {
+  root: true,
+  extends: [
+    'expo',
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
+    'plugin:react-native/all',
+    'prettier',
   ],
-  "plugins": [
-    "react",
-    "react-native",
-    "react-hooks",
-    "@typescript-eslint"
-  ],
-  "rules": {
-    "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn",
-    "@typescript-eslint/no-unused-vars": [
-      "error",
-      {
-        "argsIgnorePattern": "^_"
-      }
-    ],
-    "@typescript-eslint/explicit-module-boundary-types": "off",
-    "@typescript-eslint/no-explicit-any": "warn",
-    "react-native/no-inline-styles": "warn",
-    "no-console": [
-      "error",
-      {
-        "allow": ["warn", "error"]
-      }
-    ],
-    "react-native/no-raw-text": "warn"
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaFeatures: {
+      jsx: true,
+    },
+    ecmaVersion: 2022,
+    sourceType: 'module',
+    project: './tsconfig.json',
   },
-  "settings": {
-    "react": {
-      "version": "detect"
-    }
-  }
-}
+  plugins: [
+    '@typescript-eslint',
+    'react',
+    'react-hooks',
+    'react-native',
+    'prettier',
+  ],
+  env: {
+    'react-native/react-native': true,
+    es2022: true,
+    node: true,
+  },
+  settings: {
+    react: {
+      version: 'detect',
+    },
+  },
+  rules: {
+    // TypeScript
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      },
+    ],
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-non-null-assertion': 'warn',
+    
+    // React
+    'react/react-in-jsx-scope': 'off',
+    'react/prop-types': 'off',
+    'react/display-name': 'off',
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
+    
+    // React Native
+    'react-native/no-unused-styles': 'error',
+    'react-native/no-inline-styles': 'warn',
+    'react-native/no-color-literals': 'warn',
+    'react-native/no-raw-text': ['error', { skip: ['Text'] }],
+    
+    // General
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'prettier/prettier': 'error',
+    'prefer-const': 'error',
+    'no-var': 'error',
+    'object-shorthand': 'error',
+    'quote-props': ['error', 'as-needed'],
+    
+    // Performance
+    'react/jsx-no-bind': [
+      'error',
+      {
+        allowArrowFunctions: true,
+        allowFunctions: false,
+        allowBind: false,
+      },
+    ],
+  },
+  overrides: [
+    {
+      files: ['*.test.ts', '*.test.tsx', '**/__tests__/**/*'],
+      env: {
+        jest: true,
+      },
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'off',
+      },
+    },
+  ],
+};

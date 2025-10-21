@@ -1,23 +1,34 @@
-import { redirect } from 'next/navigation';
-import { getServerSession } from '@/lib/auth';
+import { Slot, Redirect } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import { auth } from '@/config/firebase';
 
-export default async function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const session = await getServerSession();
-  
-  // Redirect if already authenticated
-  if (session) {
-    redirect('/');
+export default function AuthLayout() {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#FF385C" />
+      </View>
+    );
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full">
-        {children}
-      </div>
-    </div>
-  );
+  // If user is logged in, redirect to home
+  if (user) {
+    return <Redirect href="/(app)/home" />;
+  }
+
+  // Show auth screens (login/signup)
+  return <Slot />;
 }
