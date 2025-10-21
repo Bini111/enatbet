@@ -320,9 +320,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
 
   // Over-the-Air Updates
-  runtimeVersion: {
-    policy: 'sdkVersion',
-  },
+  runtimeVersion: '1.0.0',
   
   updates: {
     enabled: true,
