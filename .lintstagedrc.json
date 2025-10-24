@@ -1,4 +1,8 @@
 {
-  "src/**/*.{js,jsx,ts,tsx}": ["prettier --write --ignore-unknown"],
-  "*.{json,md,yml,yaml}": ["prettier --write --ignore-unknown"]
+  "src/**/*.{js,jsx,ts,tsx}": [
+    "prettier --write --ignore-unknown"
+  ],
+  "*.{json,md,yml,yaml}": [
+    "prettier --write --ignore-unknown"
+  ]
 }
