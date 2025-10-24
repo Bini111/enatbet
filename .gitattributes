@@ -1,25 +1,6 @@
-===== BEGIN FILE: .gitattributes =====
-```
-# Auto line ending normalization
-* text=auto
-
-# Binary files
+* text=auto eol=lf
 *.png binary
 *.jpg binary
 *.jpeg binary
-*.gif binary
-*.zip binary
-*.jar binary
-*.aar binary
-
-# Keep line endings for scripts
-*.sh text eol=lf
-*.bash text eol=lf
-gradlew text eol=lf
-
-# Source files (consistent line endings)
-*.ts text eol=lf
-*.tsx text eol=lf
-*.js text eol=lf
-*.json text eol=lf
-*.md text eol=lf
+*.ico binary
+*.pbxproj -diff

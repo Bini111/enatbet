@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+build/
+dist/
+.expo/
+.expo-shared/
+**/build/
+**/dist/
+
+# Android platform files
+android/app/google-services*.json
+android/app/google-services-1.json
+android/build/
+android/.gradle/
+
+# iOS platform files  
+ios/**/Images.xcassets/**
+ios/**/Podfile.properties*.json
+ios/Pods/
+ios/build/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Firebase
+firebase.json
+firestore.indexes.json
+
+# Cache
+.eslintcache
+*.cache

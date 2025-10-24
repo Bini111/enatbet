@@ -1,64 +1,15 @@
-===== BEGIN FILE: .gitignore =====
-```
-# Dependencies
+.DS_Store
 node_modules/
-npm-debug.log
-yarn-error.log
-
-# Expo
 .expo/
 .expo-shared/
-dist/
-
-# Build artifacts
-android/app/build/
-android/.gradle/
-android/build/
 ios/Pods/
-ios/Podfile.lock
-ios/*.xcworkspace/
-ios/*.xcodeproj/xcuserdata/
 ios/build/
+android/app/build/
+android/app/debug.keystore
+archive/
 
-# Environment
-.env
-.env.local
-.env.*.local
-.env.production
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-*.jks
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Secrets
-*.p8
-*.pem
-*.key
-google-services.json
-GoogleService-Info.plist
-
-# Certificates
-*.cer
-*.p12
-*.provisioning_profile
-
-# Coverage
-coverage/
-.nyc_output/
-
-# Firebase
-.firebaserc
-
-# EAS Build Cache
-.eas/
-eas-build-hooks/
-```
+# Platform-specific generated files
+android/app/google-services-1.json
+android/app/google-services.json  
+ios/**/Podfile.properties-1.json
+ios/**/Podfile.properties.json

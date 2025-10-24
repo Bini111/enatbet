@@ -1,49 +1,126 @@
 rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
     function isSignedIn() {
       return request.auth != null;
     }
     
-    function validImageSize() {
-      return request.resource.size < 10 * 1024 * 1024; // 10MB
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
     
-    function validImageType() {
-      return request.resource.contentType.matches('image/.*');
+    function isAdmin() {
+      return isSignedIn() && getUserRole() == 'admin';
     }
-
-    // Profile images
-    match /users/{userId}/profile/{fileName} {
+    
+    function isHost() {
+      return isSignedIn() && getUserRole() == 'host';
+    }
+    
+    function isGuest() {
+      return isSignedIn() && getUserRole() == 'guest';
+    }
+    
+    function isHostOrAdmin() {
+      return isAdmin() || isHost();
+    }
+    
+    function isOwnerOrAdmin(docPath) {
+      return isAdmin() || resource.data.ownerId == request.auth.uid;
+    }
+    
+    function hasUpdatedAt() {
+      return request.resource.data.keys().hasAll(['updatedAt']);
+    }
+    
+    function hasCreatedAtAndImmutable() {
+      return request.resource.data.keys().hasAll(['createdAt']) &&
+             resource.data.createdAt == request.resource.data.createdAt;
+    }
+    
+    function validTimestamps() {
+      return hasUpdatedAt() &&
+             request.resource.data.updatedAt == request.time &&
+             (request.resource.data.keys().hasAll(['createdAt']) ? 
+              request.resource.data.createdAt == request.time : true);
+    }
+    
+    // Users collection: basic auth, own document
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && userId == request.auth.uid;
+    }
+    
+    // Listings collection: hosts create/update own, read by all, admins full
+    match /listings/{listingId} {
       allow read: if true;
-      allow write: if isSignedIn() && 
-                      request.auth.uid == userId &&
-                      validImageSize() && 
-                      validImageType();
+      allow create, update, delete: if isHostOrAdmin() && 
+                                   resource.data.ownerId == request.auth.uid &&
+                                   validTimestamps() &&
+                                   hasCreatedAtAndImmutable();
     }
-
-    // Listing images - FIXED
-    match /listings/{listingId}/{fileName} {
+    
+    // Availability subcollection: readable by all, update by host/admin
+    match /listings/{listingId}/availability/{date} {
       allow read: if true;
-      allow write: if isSignedIn() && 
-                      validImageSize() && 
-                      validImageType() &&
-                      firestore.get(/databases/(default)/documents/listings/$(listingId)).data.hostId == request.auth.uid;
+      allow write: if isHostOrAdmin() &&
+                   exists(/databases/$(database)/documents/listings/$(listingId)) &&
+                   get(/databases/$(database)/documents/listings/$(listingId)).data.ownerId == request.auth.uid &&
+                   validTimestamps();
     }
-
-    // Chat images - FIXED
-    match /conversations/{conversationId}/{fileName} {
+    
+    // Bookings collection: guests create own pending, specific updates based on role/status
+    match /bookings/{bookingId} {
       allow read: if isSignedIn() && 
-                     request.auth.uid in firestore.get(/databases/(default)/documents/conversations/$(conversationId)).data.participantIds;
-      allow write: if isSignedIn() && 
-                      validImageSize() && 
-                      validImageType() &&
-                      request.auth.uid in firestore.get(/databases/(default)/documents/conversations/$(conversationId)).data.participantIds;
+                  (resource.data.guestId == request.auth.uid || 
+                   resource.data.hostId == request.auth.uid || 
+                   isAdmin());
+      
+      allow create: if isGuest() && 
+                    validTimestamps() &&
+                    request.resource.data.status == 'pending' &&
+                    request.resource.data.guestId == request.auth.uid;
+      
+      allow update: if validTimestamps() &&
+                    hasCreatedAtAndImmutable() &&
+                    (isAdmin() || // admins full access
+                     (isGuest() && request.auth.uid == resource.data.guestId && 
+                      resource.data.status == 'pending' && 
+                      (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['specialRequests', 'contactNumber']))) ||
+                     (isHost() && request.auth.uid == resource.data.hostId && 
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])) ||
+                     false);
+      
+      allow delete: if isAdmin() || 
+                    (isHost() && request.auth.uid == resource.data.hostId) ||
+                    (isGuest() && request.auth.uid == resource.data.guestId);
     }
-
-    match /{allPaths=**} {
-      allow read, write: if false;
+    
+    // Payments collection: minimal - read by involved parties/admins, write by admins or on create by guest
+    match /payments/{paymentId} {
+      allow read: if isSignedIn() && 
+                  (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isGuest() && request.resource.data.userId == request.auth.uid && validTimestamps();
+      allow update, delete: if isAdmin() && validTimestamps() && hasCreatedAtAndImmutable();
+    }
+    
+    // Reviews collection: create after booking complete, read by all, update/delete by owner or admin
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn() && 
+                    exists(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)) &&
+                    get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.status == 'completed' &&
+                    (request.auth.uid == resource.data.authorId) &&
+                    validTimestamps();
+      allow update, delete: if isAdmin() || request.auth.uid == resource.data.authorId;
+    }
+    
+    // Reports collection: create by guests/hosts, read by admins, minimal updates
+    match /reports/{reportId} {
+      allow create: if isSignedIn() && 
+                    (isGuest() || isHost()) &&
+                    validTimestamps();
+      allow read, update, delete: if isAdmin() && validTimestamps() && hasCreatedAtAndImmutable();
     }
   }
 }
