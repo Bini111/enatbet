@@ -13,3 +13,4 @@ android/app/google-services-1.json
 android/app/google-services.json  
 ios/**/Podfile.properties-1.json
 ios/**/Podfile.properties.json
+android/app/debug.keystore

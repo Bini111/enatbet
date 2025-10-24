@@ -1,7 +1,0 @@
-{
-  "*.{js,jsx,ts,tsx}": ["eslint --fix", "prettier --write"],
-  "*.{json,md,yml,yaml}": ["prettier --write --ignore-unknown"],
-  "!(*google-services*.json|**/Images.xcassets/**|**/Podfile.properties*.json)": [
-    "prettier --write --ignore-unknown"
-  ]
-}
