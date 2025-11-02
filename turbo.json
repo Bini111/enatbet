@@ -1,0 +1,40 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local", "tsconfig.json"],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "build/**"],
+      "env": [
+        "NODE_ENV",
+        "VERCEL_ENV",
+        "NEXT_PUBLIC_FIREBASE_API_KEY",
+        "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
+        "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
+        "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
+        "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+        "NEXT_PUBLIC_FIREBASE_APP_ID",
+        "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+        "NEXT_PUBLIC_APP_URL",
+        "EXPO_PUBLIC_API_URL",
+        "EXPO_PUBLIC_FIREBASE_API_KEY",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID",
+        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY"
+      ]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"],
+      "cache": false
+    },
+    "lint": { "outputs": [] },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": ["*.tsbuildinfo"],
+      "cache": false
+    },
+    "dev": { "cache": false, "persistent": true },
+    "clean": { "cache": false }
+  }
+}

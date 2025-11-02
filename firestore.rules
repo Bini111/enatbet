@@ -1,0 +1,143 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isHost() {
+      return isAuthenticated() && getUserData().role in ['host', 'both'];
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserData().role == 'admin';
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Anyone can read user profiles (for host info, reviews, etc.)
+      allow read: if true;
+      
+      // Only the user can create their own profile
+      allow create: if isOwner(userId) && 
+                       request.resource.data.keys().hasAll(['email', 'displayName', 'role', 'status']);
+      
+      // Only the user can update their own profile
+      allow update: if isOwner(userId);
+      
+      // No deletes allowed (use status: 'deleted' instead)
+      allow delete: if false;
+    }
+    
+    // Listings collection
+    match /listings/{listingId} {
+      // Anyone can read active listings
+      allow read: if resource.data.status == 'active' || 
+                     isOwner(resource.data.hostId) ||
+                     isAdmin();
+      
+      // Only hosts can create listings
+      allow create: if isHost() && 
+                       request.resource.data.hostId == request.auth.uid &&
+                       request.resource.data.keys().hasAll(['title', 'description', 'propertyType', 'roomType', 'location', 'pricing']);
+      
+      // Only the host or admin can update their listings
+      allow update: if isOwner(resource.data.hostId) || isAdmin();
+      
+      // Only the host or admin can delete (actually just set status to inactive)
+      allow delete: if isOwner(resource.data.hostId) || isAdmin();
+    }
+    
+    // Bookings collection
+    match /bookings/{bookingId} {
+      // Only guest, host, or admin can read a booking
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.guestId ||
+        request.auth.uid == resource.data.hostId ||
+        isAdmin()
+      );
+      
+      // Only authenticated users can create bookings
+      allow create: if isAuthenticated() && 
+                       request.resource.data.guestId == request.auth.uid &&
+                       request.resource.data.status == 'pending' &&
+                       request.resource.data.keys().hasAll(['listingId', 'guestId', 'hostId', 'checkIn', 'checkOut', 'guests', 'pricing']);
+      
+      // Guest can update if they own it, host can update if they own the listing
+      // Status changes are restricted:
+      // - Guest can: cancel
+      // - Host can: confirm (if instant book), cancel, check in/out
+      // - System (via functions): confirm after payment
+      allow update: if isAuthenticated() && (
+        (request.auth.uid == resource.data.guestId && request.resource.data.status in ['pending', 'cancelled']) ||
+        (request.auth.uid == resource.data.hostId && request.resource.data.status in ['confirmed', 'checked_in', 'checked_out', 'cancelled']) ||
+        isAdmin()
+      );
+      
+      // No direct deletes (use status: 'cancelled')
+      allow delete: if false;
+    }
+    
+    // Reviews collection
+    match /reviews/{reviewId} {
+      // Anyone can read published reviews
+      allow read: if resource.data.status == 'published' ||
+                     isOwner(resource.data.reviewerId) ||
+                     isOwner(resource.data.revieweeId) ||
+                     isAdmin();
+      
+      // Only users who completed a booking can create reviews
+      allow create: if isAuthenticated() &&
+                       request.resource.data.reviewerId == request.auth.uid &&
+                       request.resource.data.keys().hasAll(['bookingId', 'listingId', 'ratings', 'comment']) &&
+                       request.resource.data.ratings.overall >= 1 && request.resource.data.ratings.overall <= 5;
+      
+      // Only the reviewer can update their review (within 48 hours)
+      allow update: if isOwner(resource.data.reviewerId) &&
+                       request.time < resource.data.createdAt + duration.value(48, 'h');
+      
+      // No deletes
+      allow delete: if false;
+    }
+    
+    // Notifications collection
+    match /notifications/{notificationId} {
+      // Only the user can read their notifications
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // System creates notifications (Cloud Functions)
+      allow create: if false;
+      
+      // Users can mark as read
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      
+      // No deletes
+      allow delete: if false;
+    }
+    
+    // Conversations (for Phase 2 - messaging)
+    match /conversations/{conversationId} {
+      allow read, write: if isAuthenticated() && 
+                            request.auth.uid in resource.data.participants;
+    }
+    
+    // Messages (for Phase 2 - messaging)
+    match /messages/{messageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
+      allow update, delete: if false;
+    }
+  }
+}

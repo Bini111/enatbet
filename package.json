@@ -1,0 +1,31 @@
+{
+  "name": "@enatbet/monorepo",
+  "private": true,
+  "packageManager": "pnpm@8.15.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.15.0"
+  },
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "clean": "turbo clean && rm -rf node_modules",
+    "deploy:web": "turbo build --filter=@enatbet/web && vercel --prod --cwd apps/web",
+    "deploy:mobile:ios": "cd apps/mobile && eas build --platform ios --profile production --non-interactive",
+    "deploy:mobile:android": "cd apps/mobile && eas build --platform android --profile production --non-interactive",
+    "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes,storage:rules",
+    "db:backup": "gcloud firestore backups schedules create --recurrence=weekly --retention=4w",
+    "stripe:listen": "stripe listen --forward-to localhost:3000/api/stripe/webhook"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.0",
+    "turbo": "^1.12.0",
+    "typescript": "^5.3.0"
+  }
+}

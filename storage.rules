@@ -1,0 +1,47 @@
+cat > storage.rules <<'EOF'
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthed() && request.auth.uid == userId;
+    }
+
+    function isImage() {
+      return request.resource != null
+        && request.resource.contentType.matches('image/.*')
+        && request.resource.size < 10 * 1024 * 1024; // 10MB
+    }
+
+    // /users/{uid}/profile/{file}
+    match /users/{userId}/profile/{fileName} {
+      allow read: if isAuthed();
+      allow write: if isOwner(userId) && isImage();
+    }
+
+    // /listings/{listingId}/images/{file}
+    // Only host of the listing can modify
+    match /listings/{listingId}/images/{fileName} {
+      allow read: if true;
+      allow create, update, delete: if isAuthed()
+        && isImage()
+        && firestore.get(/databases/(default)/documents/listings/$(listingId)).data.hostId == request.auth.uid;
+    }
+
+    // /bookings/{bookingId}/documents/{file}
+    // Read for guest or host; no client writes
+    match /bookings/{bookingId}/documents/{fileName} {
+      allow read: if isAuthed()
+        && (
+          firestore.get(/databases/(default)/documents/bookings/$(bookingId)).data.guestId == request.auth.uid
+          || firestore.get(/databases/(default)/documents/bookings/$(bookingId)).data.hostId == request.auth.uid
+        );
+      allow write: if false;
+    }
+  }
+}
+EOF

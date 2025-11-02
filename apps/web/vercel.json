@@ -1,0 +1,14 @@
+{
+  "crons": [
+    { "path": "/api/cron/cleanup-bookings", "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/cleanup-storage", "schedule": "0 2 * * *" }
+  ],
+  "headers": [
+    {
+      "source": "/api/stripe/webhook",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    }
+  ]
+}

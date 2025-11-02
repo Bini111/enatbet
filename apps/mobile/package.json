@@ -1,0 +1,29 @@
+{
+  "name": "@enatbet/mobile",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "build:ios": "eas build --platform ios --profile production",
+    "build:android": "eas build --platform android --profile production",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@enatbet/shared": "workspace:*",
+    "@stripe/stripe-react-native": "^0.37.0",
+    "expo": "~50.0.0",
+    "expo-image-picker": "~14.7.0",
+    "expo-linking": "~6.2.0",
+    "expo-location": "~16.5.0",
+    "expo-secure-store": "~12.8.0",
+    "firebase": "^10.8.0",
+    "react": "18.2.0",
+    "react-native": "0.73.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "typescript": "^5.3.0"
+  }
+}

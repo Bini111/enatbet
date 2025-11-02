@@ -1,0 +1,28 @@
+cp tsconfig.json tsconfig.backup.$(date +%s).json 2>/dev/null || true
+cat > tsconfig.json <<'JSON'
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "preserve",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@enatbet/shared": ["packages/shared/src"],
+      "@enatbet/shared/*": ["packages/shared/src/*"],
+      "@enatbet/firebase": ["packages/firebase/src"],
+      "@enatbet/firebase/*": ["packages/firebase/src/*"],
+      "@enatbet/ui": ["packages/ui/src"],
+      "@enatbet/ui/*": ["packages/ui/src/*"]
+    }
+  },
+  "exclude": ["node_modules", ".next", "dist", "build", ".expo"]
+}
+JSON

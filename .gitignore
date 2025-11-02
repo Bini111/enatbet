@@ -1,0 +1,58 @@
+# Node / package managers
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build outputs & caches
+**/.next/
+**/out/
+**/dist/
+**/build/
+**/.turbo/
+**/.cache/
+**/.expo/
+**/web-build/
+
+# OS/editor junk
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# iOS / Xcode
+**/ios/Pods/
+**/ios/build/
+**/*.xcworkspace/xcuserdata/
+**/*.xcuserdatad/
+**/DerivedData/
+
+# Android / Gradle
+**/android/.gradle/
+**/android/.idea/
+**/android/local.properties
+**/android/app/build/
+
+# Env & secrets
+.env
+.env.*
+**/.env
+**/.env.*
+**/GoogleService-Info.plist
+**/google-services.json
+
+# Firebase, Vercel, EAS artifacts
+.firebase/
+**/.vercel/
+**/eas-build/
+**/outputs/
+
+# Archives and binaries
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.ipa
+*.apk
+*.aab
