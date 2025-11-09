@@ -6,6 +6,7 @@
     "module": "esnext",
     "jsx": "preserve",
     "plugins": [{ "name": "next" }],
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@enatbet/shared": ["../../packages/shared/src"],

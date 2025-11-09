@@ -1,4 +1,4 @@
-import type { User, Listing, Booking, Review, Conversation, Message, Notification } from '@enatebet/shared';
+import type { User, Listing, Booking, Review, Conversation, Message, Notification } from '@enatbet/shared';
 
 /**
  * Firebase Firestore Converters
