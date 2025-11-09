@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+// Export utilities
+export * from './utils/helpers';
+
 export const UserSchema = z.object({
   id: z.string(),
   email: z.string().email(),
@@ -50,3 +53,18 @@ export const BookingSchema = z.object({
 export type User = z.infer<typeof UserSchema>;
 export type Property = z.infer<typeof PropertySchema>;
 export type Booking = z.infer<typeof BookingSchema>;
+
+// Payment types
+export interface BookingRequest {
+  propertyId: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  totalPrice: number;
+}
+
+export interface PaymentResult {
+  success: boolean;
+  paymentIntentId?: string;
+  error?: string;
+}

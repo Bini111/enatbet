@@ -18,6 +18,19 @@
         "EXPO_PUBLIC_APP_ENV": "development"
       }
     },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "preview"
+      },
+      "channel": "preview"
+    },
     "staging": {
       "distribution": "internal",
       "ios": {

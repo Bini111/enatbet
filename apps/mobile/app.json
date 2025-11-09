@@ -3,6 +3,10 @@
     "name": "Enatbet",
     "slug": "enatbet",
     "version": "1.0.0",
+    "ios": {
+      "bundleIdentifier": "com.enatbet.app",
+      "buildNumber": "1"
+    },
     "android": {
       "package": "com.enatbet.app",
       "versionCode": 1,

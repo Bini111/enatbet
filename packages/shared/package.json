@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@upstash/redis": "^1.28.0",
+    "date-fns": "^3.0.0",
     "firebase": "^10.8.0",
     "zod": "^3.22.4"
   },
