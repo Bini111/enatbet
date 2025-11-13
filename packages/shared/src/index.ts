@@ -1,52 +1,42 @@
-import { z } from 'zod';
+/**
+ * Shared package - Types, utilities, and constants
+ * Explicit exports to avoid circular dependencies
+ */
 
-export const UserSchema = z.object({
-  id: z.string(),
-  email: z.string().email(),
-  displayName: z.string(),
-  photoURL: z.string().optional(),
-  role: z.enum(['guest', 'host', 'admin']),
-  createdAt: z.date(),
-});
+// Type-only exports from types
+export type { Money, PriceBreakdown } from './types/money';
+export type { User, UserRole, UserStatus, HostProfile, CreateUserInput } from './types/user';
+export type { Listing, ListingStatus, PropertyType, RoomType, Location, CreateListingInput, UpdateListingInput } from './types/listing';
+export type { Booking, BookingStatus, CreateBookingInput, BookingAvailability, CancelBookingInput } from './types/booking';
+export type { Payment, PaymentStatus, CreatePaymentIntentInput, CreatePaymentIntentResponse, RefundInput } from './types/payment';
+export type { Review, CreateReviewInput, ReviewSummary } from './types/review';
+export type { Message, Conversation, MessageType, CreateMessageInput, CreateConversationInput } from './types/message';
+export type { Notification, NotificationType, CreateNotificationInput } from './types/notification';
 
-export const PropertySchema = z.object({
-  id: z.string(),
-  hostId: z.string(),
-  title: z.string(),
-  description: z.string(),
-  pricePerNight: z.number(),
-  location: z.object({
-    address: z.string(),
-    city: z.string(),
-    country: z.string(),
-    coordinates: z.object({
-      lat: z.number(),
-      lng: z.number(),
-    }),
-  }),
-  amenities: z.array(z.string()),
-  images: z.array(z.string()),
-  maxGuests: z.number(),
-  bedrooms: z.number(),
-  bathrooms: z.number(),
-  status: z.enum(['active', 'inactive', 'pending']),
-  createdAt: z.date(),
-});
+// Runtime exports from types/money
+export { CURRENCY_SYMBOLS, formatMoney } from './types/money';
 
-export const BookingSchema = z.object({
-  id: z.string(),
-  propertyId: z.string(),
-  guestId: z.string(),
-  hostId: z.string(),
-  checkIn: z.date(),
-  checkOut: z.date(),
-  guests: z.number(),
-  totalPrice: z.number(),
-  status: z.enum(['pending', 'confirmed', 'cancelled', 'completed']),
-  paymentIntentId: z.string().optional(),
-  createdAt: z.date(),
-});
+// Constants - explicit exports to avoid Currency conflict
+export {
+  CURRENCIES,
+  DEFAULT_CURRENCY,
+  isCurrency,
+  getCurrencyInfo,
+  toMinorUnits,
+  fromMinorUnits,
+  STRIPE_MIN_CHARGE_MINOR_UNITS,
+  meetsStripeMinimum,
+  getStripeMinimumMajor,
+  ZERO_DECIMAL_CURRENCIES,
+  isZeroDecimal,
+  CONFIG_KEYS
+} from './constants/currencies';
+export type { Currency, StripeMinCurrency } from './constants/currencies';
 
-export type User = z.infer<typeof UserSchema>;
-export type Property = z.infer<typeof PropertySchema>;
-export type Booking = z.infer<typeof BookingSchema>;
+// Utilities
+export * from './utils/money';
+export * from './utils/validation';
+export * from './utils/date';
+
+// Rate Limiter
+export * from './lib/rate-limiter';

@@ -1,58 +1,102 @@
-# Node / package managers
-node_modules/
-.pnpm-store/
-npm-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+# ============================================
+# ENATBET MONOREPO .GITIGNORE
+# ============================================
 
-# Build outputs & caches
-**/.next/
-**/out/
-**/dist/
-**/build/
-**/.turbo/
-**/.cache/
-**/.expo/
-**/web-build/
-
-# OS/editor junk
-.DS_Store
-*.log
-.vscode/
-.idea/
-
-# iOS / Xcode
-**/ios/Pods/
-**/ios/build/
-**/*.xcworkspace/xcuserdata/
-**/*.xcuserdatad/
-**/DerivedData/
-
-# Android / Gradle
-**/android/.gradle/
-**/android/.idea/
-**/android/local.properties
-**/android/app/build/
-
-# Env & secrets
+# --- Environment & Secrets ---
 .env
 .env.*
-**/.env
-**/.env.*
-**/GoogleService-Info.plist
-**/google-services.json
+!.env.example
+.env*.local
+.envrc
+firebase-service-*.json
+serviceAccount*.json
+*.keystore
+*.jks
+keystore.properties
+android/app/google-services.json
+ios/GoogleService-Info.plist
 
-# Firebase, Vercel, EAS artifacts
-.firebase/
-**/.vercel/
-**/eas-build/
-**/outputs/
+# --- Dependencies ---
+node_modules/
+pnpm-lock.yaml.tmp
+.pnpm-store/
+.npm/
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+.pnp
+.pnp.js
 
-# Archives and binaries
-*.zip
-*.tar
-*.tar.gz
-*.tgz
+# --- Build Outputs (all packages) ---
+**/dist/
+**/build/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+.expo/
+dist/
+.expo-shared/
+expo-cache/
+web-build/
+
+# --- Logs & Debug ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+firebase-debug.log
+expo-debug.log
+
+# --- Testing & Coverage ---
+coverage/
+.nyc_output/
+
+# --- Caches ---
+.turbo/
+.turbo-cache/
+.eslintcache
+
+# --- Android ---
+android/.gradle/
+android/.idea/
+android/local.properties
+android/build/
+android/app/build/
+android/captures/
+
+# --- iOS ---
+ios/Pods/
+ios/build/
+ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+ios/*.xcodeproj/xcuserdata/
+ios/*.xcworkspace/xcuserdata/
+*.xcuserstate
+DerivedData/
+*.hmap
 *.ipa
-*.apk
-*.aab
+*.dSYM.zip
+*.dSYM
+
+# --- Deployment ---
+.vercel/
+.vercel.json
+.easl
+.sentryclirc
+
+# --- Editors / IDEs ---
+.vscode/
+.idea/
+*.sublime-*
+*.swp
+*.swo
+*~
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini

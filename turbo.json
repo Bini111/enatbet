@@ -1,40 +1,38 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env.*local", "tsconfig.json"],
-  "pipeline": {
+  "ui": "tui",
+  "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**", "build/**"],
+      "outputs": [".next/**", "dist/**", "build/**", "!.next/cache/**"],
       "env": [
         "NODE_ENV",
-        "VERCEL_ENV",
-        "NEXT_PUBLIC_FIREBASE_API_KEY",
-        "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
-        "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
-        "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
-        "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
-        "NEXT_PUBLIC_FIREBASE_APP_ID",
-        "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
-        "NEXT_PUBLIC_APP_URL",
-        "EXPO_PUBLIC_API_URL",
-        "EXPO_PUBLIC_FIREBASE_API_KEY",
-        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN",
-        "EXPO_PUBLIC_FIREBASE_PROJECT_ID",
-        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY"
+        "NEXT_PUBLIC_*",
+        "EXPO_PUBLIC_*",
+        "STRIPE_API_VERSION",
+        "PLATFORM_FEE_PERCENTAGE",
+        "TAX_RATE",
+        "MIN_BOOKING_AMOUNT_MAJOR",
+        "STRIPE_WEBHOOK_SECRET_TEST",
+        "STRIPE_WEBHOOK_SECRET_LIVE"
       ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "outputs": []
+    },
+    "typecheck": {
+      "outputs": []
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"],
-      "cache": false
+      "outputs": ["coverage/**"]
     },
-    "lint": { "outputs": [] },
-    "typecheck": {
-      "dependsOn": ["^build"],
-      "outputs": ["*.tsbuildinfo"],
+    "clean": {
       "cache": false
-    },
-    "dev": { "cache": false, "persistent": true },
-    "clean": { "cache": false }
+    }
   }
 }

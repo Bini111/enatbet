@@ -1,176 +1,234 @@
+/**
+ * Create Payment Intent API Route
+ * Production-hardened payment creation with comprehensive validation
+ * 
+ * SECURITY:
+ * - Firebase auth verification
+ * - Zod schema validation
+ * - Server-side host account lookup (NOT client-supplied)
+ * - Deterministic idempotency
+ * - Safe Firestore operations
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import { createPaymentIntent, createCustomer } from '@/lib/stripe';
+import { validateStripeCharge } from '@/lib/stripe-validation';
+import { getBusinessConfig } from '@/lib/config/business';
+import { calculatePriceBreakdown, convertToStripeAmount } from '@enatbet/shared';
+import { auth, db } from '@/lib/firebase-admin';
+import type { Money } from '@enatbet/shared';
+import { createHash } from 'crypto';
 import { z } from 'zod';
-import crypto from 'crypto';
-import { Timestamp } from 'firebase-admin/firestore';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { RateLimiter, MoneyUtils, SUPPORTED_CURRENCIES } from '@enatbet/shared';
+import Stripe from 'stripe';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20',
-  typescript: true,
+const moneySchema = z.object({
+  amount: z.number().finite().positive(),
+  currency: z.string().length(3).toUpperCase().default('USD'),
 });
 
-const createPaymentSchema = z.object({
-  listingId: z.string(), // Firestore doc IDs aren't guaranteed UUIDs
-  checkIn: z.string().datetime(),
-  checkOut: z.string().datetime(),
-  guests: z.number().int().min(1).max(16)
-});
+const requestSchema = z.object({
+  bookingId: z.string().min(1).max(128),
+  listingId: z.string().min(1).max(128),
+  pricePerNight: moneySchema,
+  nights: z.number().int().positive().max(365),
+  cleaningFee: moneySchema.optional(),
+}).strict();
 
-const rateLimiter = new RateLimiter({ windowMs: 60_000, max: 5 });
+function generateIdempotencyKey(bookingId: string): string {
+  const hash = createHash('sha256').update(`payment:${bookingId}`).digest('hex');
+  return `payment-${hash.substring(0, 32)}`;
+}
 
-export async function POST(req: NextRequest) {
-  const correlationId = crypto.createHash('sha256')
-    .update(`${Date.now()}-${Math.random()}`)
-    .digest('hex')
-    .slice(0, 16);
-
+async function getHostStripeAccount(listingId: string): Promise<string | undefined> {
   try {
-    // Auth
-    const token = req.headers.get('authorization')?.split('Bearer ')[1];
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const decoded = await adminAuth.verifyIdToken(token);
-    const guestId = decoded.uid;
+    const listingDoc = await db.collection('listings').doc(listingId).get();
+    
+    if (!listingDoc.exists) {
+      throw new Error('Listing not found');
+    }
+    
+    const listing = listingDoc.data();
+    const hostId = listing?.hostId;
+    
+    if (!hostId) {
+      throw new Error('Listing has no host');
+    }
+    
+    const hostDoc = await db.collection('users').doc(hostId).get();
+    const hostData = hostDoc.data();
+    
+    return hostData?.stripeConnectAccountId;
+  } catch (error) {
+    console.error('[CREATE_PAYMENT] Host lookup failed:', error);
+    return undefined;
+  }
+}
 
-    // Rate limit
-    const ok = await rateLimiter.check(`payment:${guestId}`);
-    if (!ok) return NextResponse.json({ error: 'Too many attempts' }, { status: 429 });
+export async function POST(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Missing or invalid Authorization header' },
+        { status: 401 }
+      );
+    }
 
-    // Validate
-    const body = await req.json();
-    const { listingId, checkIn, checkOut, guests } = createPaymentSchema.parse(body);
+    const idToken = authHeader.slice(7);
+    let decodedToken;
+    
+    try {
+      decodedToken = await auth.verifyIdToken(idToken);
+    } catch (error) {
+      console.error('[CREATE_PAYMENT] Token verification failed');
+      return NextResponse.json(
+        { error: 'Invalid or expired authentication token' },
+        { status: 401 }
+      );
+    }
 
-    // Convert to Timestamps before querying
-    const checkInTs = Timestamp.fromDate(new Date(checkIn));
-    const checkOutTs = Timestamp.fromDate(new Date(checkOut));
+    const userId = decodedToken.uid;
+    const userEmail = decodedToken.email;
+    const userName = decodedToken.name;
 
-    // Pre-generate booking ID
-    const bookingId = adminDb.collection('bookings').doc().id;
+    if (!userEmail) {
+      return NextResponse.json(
+        { error: 'User email required for payment processing' },
+        { status: 400 }
+      );
+    }
 
-    // Transaction: availability, host capability, pricing, booking create
-    const result = await adminDb.runTransaction(async (tx) => {
-      const listingRef = adminDb.collection('listings').doc(listingId);
-      const listingSnap = await tx.get(listingRef);
-      if (!listingSnap.exists) throw new Error('Listing not found');
-      const listing = listingSnap.data() as any;
-
-      // Host doc
-      const hostRef = adminDb.collection('users').doc(listing.hostId);
-      const hostSnap = await tx.get(hostRef);
-      if (!hostSnap.exists) throw new Error('Host not found');
-      const hostData = hostSnap.data() as any;
-      if (!hostData.stripeAccountId || !hostData.stripeChargesEnabled || !hostData.stripePayoutsEnabled) {
-        throw new Error('Host account not active');
-      }
-
-      // Overlap query (composite index required)
-      const overlapQuery = adminDb
-        .collection('bookings')
-        .where('listingId', '==', listingId)
-        .where('status', 'in', ['confirmed', 'pending_payment', 'payment_processing'])
-        .where('checkIn', '<', checkOutTs)
-        .where('checkOut', '>', checkInTs);
-
-      const overlapSnap = await tx.get(overlapQuery);
-      if (!overlapSnap.empty) throw new Error('Dates not available');
-
-      // Nights
-      const nights = Math.ceil((checkOutTs.toMillis() - checkInTs.toMillis()) / 86_400_000);
-      if (nights < 1) throw new Error('Invalid date range');
-
-      // Currency and pricing
-      const currency = SUPPORTED_CURRENCIES[listing.currency];
-      if (!currency) throw new Error('Unsupported currency for listing');
-      const pricePerNightMinor = MoneyUtils.toMinorUnits(listing.pricePerNight, currency);
-      const subtotalMinor = pricePerNightMinor * nights;
-      const serviceFeeMinor = Math.round(subtotalMinor * 0.15);
-      const totalMinor = subtotalMinor + serviceFeeMinor;
-      const hostPayoutMinor = subtotalMinor - serviceFeeMinor;
-
-      const now = Timestamp.now();
-      const expiresAt = Timestamp.fromMillis(now.toMillis() + 30 * 60 * 1000);
-
-      const bookingData = {
-        id: bookingId,
-        listingId,
-        hostId: listing.hostId,
-        guestId,
-        status: 'pending_payment',
-        checkIn: checkInTs,
-        checkOut: checkOutTs,
-        guests,
-        pricing: {
-          nights,
-          pricePerNight: { amount: pricePerNightMinor, currency },
-          subtotal: { amount: subtotalMinor, currency },
-          serviceFee: { amount: serviceFeeMinor, currency },
-          hostPayout: { amount: hostPayoutMinor, currency },
-          total: { amount: totalMinor, currency },
-          refundable: listing.cancellationPolicy === 'flexible',
-          cancellationDeadline: listing.cancellationPolicy === 'flexible'
-            ? Timestamp.fromMillis(checkInTs.toMillis() - 24 * 60 * 60 * 1000)
-            : null,
+    const body = await request.json();
+    const parseResult = requestSchema.safeParse(body);
+    
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { 
+          error: 'Invalid request data',
+          details: parseResult.error.format()
         },
-        correlationId,
-        createdAt: now,
-        updatedAt: now,
-        expiresAt,
-      };
+        { status: 400 }
+      );
+    }
 
-      tx.set(adminDb.collection('bookings').doc(bookingId), bookingData);
+    const {
+      bookingId,
+      listingId,
+      pricePerNight,
+      nights,
+      cleaningFee,
+    } = parseResult.data;
 
-      return { booking: bookingData, hostStripeAccount: hostData.stripeAccountId };
-    });
+    const config = getBusinessConfig();
+    
+    const pricePerNightMoney: Money = {
+      amount: pricePerNight.amount,
+      currency: pricePerNight.currency,
+    };
+    
+    const cleaningFeeMoney: Money | undefined = cleaningFee ? {
+      amount: cleaningFee.amount,
+      currency: cleaningFee.currency,
+    } : undefined;
+    
+    const pricing = calculatePriceBreakdown(
+      pricePerNightMoney,
+      nights,
+      config.platformFeeRate,
+      config.taxRate,
+      cleaningFeeMoney
+    );
 
-    const { booking, hostStripeAccount } = result;
+    const validation = validateStripeCharge(
+      pricing.total.amount,
+      pricing.total.currency as any
+    );
 
-    // Deterministic idempotency key
-    const idempotencyKey = crypto.createHash('sha256')
-      .update(`${booking.id}-${booking.guestId}-${booking.listingId}-${booking.checkIn.toMillis()}`)
-      .digest('hex');
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400 }
+      );
+    }
 
-    // PaymentIntent
-    const pi = await stripe.paymentIntents.create({
-      amount: booking.pricing.total.amount,
-      currency: booking.pricing.total.currency.code.toLowerCase(),
-      payment_method_types: ['card'],
-      application_fee_amount: booking.pricing.serviceFee.amount,
-      transfer_data: { destination: hostStripeAccount },
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    const userData = userDoc.data();
+    
+    let stripeCustomerId = userData?.stripeCustomerId;
+    
+    if (!stripeCustomerId) {
+      const customer = await createCustomer(userEmail, userName);
+      stripeCustomerId = customer.id;
+      
+      await userRef.set(
+        {
+          stripeCustomerId: customer.id,
+          updatedAt: new Date(),
+        },
+        { merge: true }
+      );
+    }
+
+    const hostStripeAccountId = await getHostStripeAccount(listingId);
+    const platformFeeAmount = hostStripeAccountId 
+      ? convertToStripeAmount(pricing.serviceFee)
+      : undefined;
+
+    const clientIdempotencyKey = request.headers.get('Idempotency-Key');
+    const idempotencyKey = clientIdempotencyKey || generateIdempotencyKey(bookingId);
+
+    const paymentIntent = await createPaymentIntent({
+      amount: convertToStripeAmount(pricing.total),
+      currency: pricing.total.currency.toLowerCase(),
+      customerId: stripeCustomerId,
+      connectedAccountId: hostStripeAccountId,
+      applicationFeeAmount: platformFeeAmount,
       metadata: {
         bookingId,
         listingId,
-        guestId,
-        hostId: booking.hostId,
-        correlationId,
-        environment: process.env.VERCEL_ENV || 'development',
+        nights: String(nights),
+        guestEmail: userEmail,
+        userId,
       },
-      description: `Booking ${bookingId}`,
-      statement_descriptor: 'ENATBET',
-      receipt_email: decoded.email || undefined,
-    }, { idempotencyKey });
-
-    await adminDb.collection('bookings').doc(bookingId).update({
-      paymentIntentId: pi.id,
-      status: 'payment_processing',
-      updatedAt: Timestamp.now(),
+      idempotencyKey,
     });
 
     return NextResponse.json({
-      bookingId,
-      clientSecret: pi.client_secret,
-      amount: booking.pricing.total, // minor units + currency object
-      expiresAt: booking.expiresAt.toMillis(),
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+      customerId: stripeCustomerId,
+      amount: pricing.total.amount,
+      currency: pricing.total.currency,
+      breakdown: {
+        basePrice: pricing.basePrice,
+        cleaningFee: pricing.cleaningFee,
+        serviceFee: pricing.serviceFee,
+        tax: pricing.tax,
+        total: pricing.total,
+      },
     });
-  } catch (err: any) {
-    const msg = err?.message || 'Payment processing failed';
-    const status =
-      msg === 'Dates not available' ? 409 :
-      msg === 'Host account not active' ? 400 :
-      500;
-    return NextResponse.json({ error: msg }, { status });
+
+  } catch (error: any) {
+    console.error('[CREATE_PAYMENT] Error:', {
+      message: error.message,
+      type: error.type,
+    });
+
+    if (error instanceof Stripe.errors.StripeError) {
+      const statusCode = error.statusCode || 500;
+      return NextResponse.json(
+        { error: error.message },
+        { status: statusCode }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Failed to create payment intent' },
+      { status: 500 }
+    );
   }
 }

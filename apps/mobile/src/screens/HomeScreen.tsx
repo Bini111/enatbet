@@ -1,78 +1,133 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet, FlatList, ScrollView } from 'react-native';
-import { Text, Searchbar, Button } from 'react-native-paper';
-import { usePropertyStore } from '../store/propertyStore';
-import { PropertyCard } from '../components/property/PropertyCard';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
-type HomeScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
-};
-
-export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const { featuredProperties, fetchFeaturedProperties, isLoading } = usePropertyStore();
-
-  useEffect(() => {
-    fetchFeaturedProperties();
-  }, []);
-
+export default function HomeScreen() {
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text variant="headlineMedium" style={styles.title}>
-          Find Your Next Stay
+      <LinearGradient
+        colors={['#EC4899', '#8B5CF6']}
+        style={styles.heroSection}
+      >
+        <Text style={styles.emoji}>🇪🇹 🏠 🇪🇷</Text>
+        <Text style={styles.title}>ENATBET</Text>
+        <Text style={styles.slogan}>"Book a home, not just a room"</Text>
+        <Text style={styles.subtitle}>
+          Connecting Ethiopian & Eritrean diaspora communities worldwide
         </Text>
         
-        <Searchbar
-          placeholder="Where are you going?"
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={styles.searchBar}
-          onSubmitEditing={() => navigation.navigate('Search', { location: searchQuery })}
-        />
-      </View>
+        <TouchableOpacity style={styles.button}>
+          <Text style={styles.buttonText}>Start Exploring</Text>
+        </TouchableOpacity>
+      </LinearGradient>
 
-      <View style={styles.section}>
-        <Text variant="titleLarge" style={styles.sectionTitle}>
-          Featured Properties
-        </Text>
+      <View style={styles.featuresSection}>
+        <Text style={styles.featuresTitle}>Why Choose Enatbet?</Text>
         
-        {featuredProperties.map((property) => (
-          <PropertyCard
-            key={property.id}
-            property={property}
-            onPress={() => navigation.navigate('PropertyDetails', { propertyId: property.id })}
-          />
-        ))}
+        <View style={styles.featureCard}>
+          <Text style={styles.featureEmoji}>🏡</Text>
+          <Text style={styles.featureTitle}>Community Homes</Text>
+          <Text style={styles.featureText}>
+            Stay with Ethiopian & Eritrean families worldwide
+          </Text>
+        </View>
+
+        <View style={styles.featureCard}>
+          <Text style={styles.featureEmoji}>☕</Text>
+          <Text style={styles.featureTitle}>Cultural Experience</Text>
+          <Text style={styles.featureText}>
+            Enjoy coffee ceremonies and traditional hospitality
+          </Text>
+        </View>
+
+        <View style={styles.featureCard}>
+          <Text style={styles.featureEmoji}>🤝</Text>
+          <Text style={styles.featureTitle}>Trusted Network</Text>
+          <Text style={styles.featureText}>
+            Book with confidence within our community
+          </Text>
+        </View>
       </View>
     </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
   },
-  header: {
-    padding: 16,
-    paddingTop: 60,
+  heroSection: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 400,
+  },
+  emoji: {
+    fontSize: 48,
+    marginBottom: 20,
   },
   title: {
-    marginBottom: 16,
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 20,
+    letterSpacing: 2,
+  },
+  slogan: {
+    fontSize: 24,
+    color: '#fff',
+    fontStyle: 'italic',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 30,
+    paddingHorizontal: 20,
+  },
+  button: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 40,
+    paddingVertical: 15,
+    borderRadius: 25,
+    marginTop: 20,
+  },
+  buttonText: {
+    color: '#EC4899',
+    fontSize: 18,
     fontWeight: 'bold',
   },
-  searchBar: {
-    elevation: 4,
+  featuresSection: {
+    padding: 20,
   },
-  section: {
-    marginTop: 24,
-  },
-  sectionTitle: {
-    marginHorizontal: 16,
-    marginBottom: 16,
+  featuresTitle: {
+    fontSize: 32,
     fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 30,
+  },
+  featureCard: {
+    backgroundColor: '#f9fafb',
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  featureEmoji: {
+    fontSize: 48,
+    marginBottom: 10,
+  },
+  featureTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  featureText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
 });

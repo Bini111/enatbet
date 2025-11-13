@@ -1,29 +1,39 @@
 {
   "name": "@enatbet/mobile",
   "version": "1.0.0",
-  "private": true,
+  "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "build:ios": "eas build --platform ios --profile production",
-    "build:android": "eas build --platform android --profile production",
-    "typecheck": "tsc --noEmit"
+    "postinstall": "patch-package"
   },
   "dependencies": {
-    "@enatbet/shared": "workspace:*",
-    "@stripe/stripe-react-native": "^0.37.0",
+    "@react-native-async-storage/async-storage": "1.21.0",
+    "@stripe/stripe-react-native": "0.35.1",
     "expo": "~50.0.0",
-    "expo-image-picker": "~14.7.0",
-    "expo-linking": "~6.2.0",
-    "expo-location": "~16.5.0",
-    "expo-secure-store": "~12.8.0",
-    "firebase": "^10.8.0",
+    "expo-asset": "~9.0.2",
+    "expo-constants": "~15.4.6",
+    "expo-linking": "~6.2.2",
+    "expo-router": "~3.4.10",
+    "expo-status-bar": "~1.11.1",
+    "firebase": "10.7.1",
     "react": "18.2.0",
-    "react-native": "0.73.0"
+    "react-dom": "18.2.0",
+    "react-native": "0.73.6",
+    "react-native-safe-area-context": "4.8.2",
+    "react-native-screens": "~3.29.0",
+    "react-native-web": "~0.19.6"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "typescript": "^5.3.0"
-  }
+    "@babel/core": "^7.20.0",
+    "@types/react": "~18.2.45",
+    "babel-plugin-transform-import-meta": "^2.2.1",
+    "metro-cache": "^0.83.3",
+    "metro-config": "^0.83.3",
+    "metro-resolver": "^0.83.3",
+    "patch-package": "^8.0.1",
+    "typescript": "^5.1.3"
+  },
+  "private": true
 }

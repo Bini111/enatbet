@@ -1,0 +1,26 @@
+import { ExpoConfig, ConfigContext } from 'expo/config';
+
+export default ({ config }: ConfigContext): ExpoConfig => {
+  const baseConfig = require('./app.json').expo;
+  
+  // Only add Stripe plugin for production builds (not Expo Go)
+  const isProduction = process.env.EXPO_PUBLIC_APP_ENV === 'production';
+  
+  if (isProduction) {
+    baseConfig.plugins = [
+      ...baseConfig.plugins,
+      [
+        '@stripe/stripe-react-native',
+        {
+          merchantIdentifier: 'merchant.com.enatbet.app',
+          enableGooglePay: true,
+        }
+      ]
+    ];
+  }
+  
+  return {
+    ...config,
+    ...baseConfig,
+  };
+};

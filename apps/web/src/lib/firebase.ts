@@ -1,119 +1,150 @@
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut as firebaseSignOut, 
-  onAuthStateChanged,
-  Auth,
-  updateProfile
+/**
+ * Firebase Client SDK for browser/client-side operations
+ */
+
+import { initializeApp, getApps } from 'firebase/app';
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged as firebaseOnAuthStateChanged,
+  updateProfile,
+  type User,
+  type Auth,
 } from 'firebase/auth';
-import { 
-  getFirestore, 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  setDoc, 
-  query, 
-  where, 
-  Timestamp,
-  Firestore 
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+  type Firestore,
 } from 'firebase/firestore';
-import { getStorage, FirebaseStorage } from 'firebase/storage';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAy7T8dAvCVMJ0txqYr9xBm5xiqdOBp8ik",
-  authDomain: "enatbet-906c4.firebaseapp.com",
-  projectId: "enatbet-906c4",
-  storageBucket: "enatbet-906c4.firebasestorage.app",
-  messagingSenderId: "102221912302",
-  appId: "1:102221912302:web:0966522ce66ac27051c9a6",
-  measurementId: "G-MM63EBC9J3"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
+// Initialize Firebase (client-side)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const auth: Auth = getAuth(app);
+const db: Firestore = getFirestore(app);
+const storage: FirebaseStorage = getStorage(app);
 
-if (typeof window !== 'undefined') {
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-  auth = getAuth(app);
-  // 🔥 THE FIX: Target the named database explicitly
-  db = getFirestore(app, 'enatbet-db');
-  storage = getStorage(app);
+// Export Firebase instances
+export { app, auth, db, storage };
+
+// Re-export onAuthStateChanged
+export { onAuthStateChanged } from 'firebase/auth';
+
+/**
+ * Sign in with email and password
+ */
+export async function signIn(email: string, password: string) {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    return userCredential;
+  } catch (error: any) {
+    console.error('[FIREBASE] Sign in error:', error);
+    throw new Error(error.message || 'Failed to sign in');
+  }
 }
 
-export const COLLECTIONS = {
-  USERS: 'users',
-  PROPERTIES: 'properties',
-  BOOKINGS: 'bookings',
-  REVIEWS: 'reviews',
-};
+/**
+ * Create a new user account
+ */
+export async function createUser(
+  email: string,
+  password: string,
+  displayName: string
+) {
+  try {
+    // Create auth account
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-export const createUser = async (email: string, password: string, displayName: string) => {
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  
-  await updateProfile(userCredential.user, { displayName });
-  
-  const newUser = {
-    id: userCredential.user.uid,
-    email: userCredential.user.email!,
-    displayName,
-    role: 'guest',
-    isVerified: false,
-    createdAt: Timestamp.now(),
-    updatedAt: Timestamp.now(),
-  };
-  
-  const userRef = doc(db, COLLECTIONS.USERS, userCredential.user.uid);
-  await setDoc(userRef, newUser);
-  
-  return {
-    ...newUser,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-};
+    // Update display name
+    await updateProfile(user, { displayName });
 
-export const signIn = async (email: string, password: string) => {
-  return await signInWithEmailAndPassword(auth, email, password);
-};
-
-export const signOut = async () => {
-  return await firebaseSignOut(auth);
-};
-
-export const getCurrentUser = async (uid: string) => {
-  const userRef = doc(db, COLLECTIONS.USERS, uid);
-  const userDoc = await getDoc(userRef);
-  
-  if (userDoc.exists()) {
-    const data = userDoc.data();
-    return {
-      ...data,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date(),
+    // Create user document in Firestore
+    const userDoc = {
+      uid: user.uid,
+      email: user.email,
+      displayName,
+      role: 'guest',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      emailVerified: false,
+      profileComplete: false,
     };
+
+    await setDoc(doc(db, 'users', user.uid), userDoc);
+
+    return { ...userDoc, uid: user.uid, email: user.email! };
+  } catch (error: any) {
+    console.error('[FIREBASE] Create user error:', error);
+    throw new Error(error.message || 'Failed to create account');
   }
-  return null;
-};
+}
 
-export const getProperties = async (filters?: any) => {
-  const propertiesRef = collection(db, COLLECTIONS.PROPERTIES);
-  let q = query(propertiesRef, where('status', '==', 'active'));
-  
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => {
-    const data = doc.data();
+/**
+ * Sign out the current user
+ */
+export async function signOut() {
+  try {
+    await firebaseSignOut(auth);
+  } catch (error: any) {
+    console.error('[FIREBASE] Sign out error:', error);
+    throw new Error(error.message || 'Failed to sign out');
+  }
+}
+
+/**
+ * Get current user data from Firestore
+ */
+export async function getCurrentUser(uid: string) {
+  try {
+    const userDoc = await getDoc(doc(db, 'users', uid));
+    
+    if (!userDoc.exists()) {
+      console.warn('[FIREBASE] User document not found:', uid);
+      return null;
+    }
+
     return {
-      id: doc.id,
-      ...data,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date(),
+      uid,
+      ...userDoc.data(),
     };
-  });
-};
+  } catch (error: any) {
+    console.error('[FIREBASE] Get user error:', error);
+    return null;
+  }
+}
 
-export { auth, db, storage, onAuthStateChanged };
+/**
+ * Check if user is authenticated
+ */
+export function getCurrentAuthUser(): User | null {
+  return auth.currentUser;
+}
+
+/**
+ * Wait for auth to initialize
+ */
+export function waitForAuth(): Promise<User | null> {
+  return new Promise((resolve) => {
+    const unsubscribe = firebaseOnAuthStateChanged(auth, (user) => {
+      unsubscribe();
+      resolve(user);
+    });
+  });
+}
+
+export default app;

@@ -1,0 +1,10 @@
+cd ~/Desktop/enatbet/apps/mobile/assets
+
+# Delete the broken files
+rm icon.png adaptive-icon.png splash.png favicon.png
+
+# Download valid placeholder images (1024x1024 icon, 1242x2436 splash)
+curl -o icon.png "https://via.placeholder.com/1024x1024/4F46E5/FFFFFF?text=Enatbet"
+curl -o adaptive-icon.png "https://via.placeholder.com/1024x1024/4F46E5/FFFFFF?text=E"
+curl -o splash.png "https://via.placeholder.com/1242x2436/4F46E5/FFFFFF?text=Enatbet"
+curl -o favicon.png "https://via.placeholder.com/48x48/4F46E5/FFFFFF?text=E"

@@ -11,6 +11,10 @@ import { BookingScreen } from '../screens/BookingScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { SignUpScreen } from '../screens/SignUpScreen';
+import { FavoritesScreen } from '../screens/FavoritesScreen';
+import { MessagesScreen } from '../screens/MessagesScreen';
+import { ChatScreen } from '../screens/ChatScreen';
+import { MyBookingsScreen } from '../screens/MyBookingsScreen';
 
 import { RootStackParamList, TabParamList } from './types';
 
@@ -37,7 +41,7 @@ function TabNavigator() {
       />
       <Tab.Screen
         name="Favorites"
-        component={HomeScreen}
+        component={FavoritesScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Icon name="heart-outline" size={size} color={color} />
@@ -46,10 +50,19 @@ function TabNavigator() {
       />
       <Tab.Screen
         name="Bookings"
-        component={HomeScreen}
+        component={MyBookingsScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Icon name="calendar" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Messages"
+        component={MessagesScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="message-outline" size={size} color={color} />
           ),
         }}
       />
@@ -82,6 +95,11 @@ export default function AppNavigator() {
           options={{ title: 'Property Details' }}
         />
         <Stack.Screen name="Booking" component={BookingScreen} />
+        <Stack.Screen
+          name="Chat"
+          component={ChatScreen}
+          options={{ title: 'Chat' }}
+        />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
       </Stack.Navigator>

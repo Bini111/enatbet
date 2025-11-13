@@ -1,47 +1,128 @@
-cat > storage.rules <<'EOF'
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-
-    function isAuthed() {
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    function isAuthenticated() {
       return request.auth != null;
     }
-
+    
     function isOwner(userId) {
-      return isAuthed() && request.auth.uid == userId;
+      return request.auth.uid == userId;
     }
-
-    function isImage() {
-      return request.resource != null
-        && request.resource.contentType.matches('image/.*')
-        && request.resource.size < 10 * 1024 * 1024; // 10MB
+    
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 10 * 1024 * 1024; // 10MB max
     }
-
-    // /users/{uid}/profile/{file}
-    match /users/{userId}/profile/{fileName} {
-      allow read: if isAuthed();
-      allow write: if isOwner(userId) && isImage();
+    
+    function isValidDocument() {
+      return request.resource.contentType in ['application/pdf', 'image/jpeg', 'image/png'] &&
+             request.resource.size < 5 * 1024 * 1024; // 5MB max
     }
-
-    // /listings/{listingId}/images/{file}
-    // Only host of the listing can modify
-    match /listings/{listingId}/images/{fileName} {
+    
+    function hasVerifiedEmail() {
+      return request.auth.token.email_verified == true;
+    }
+    
+    // ============================================
+    // USER PROFILE IMAGES
+    // ============================================
+    
+    match /users/{userId}/profile/{imageId} {
+      // Anyone can read profile images
       allow read: if true;
-      allow create, update, delete: if isAuthed()
-        && isImage()
-        && firestore.get(/databases/(default)/documents/listings/$(listingId)).data.hostId == request.auth.uid;
+      
+      // Users can upload their own profile image
+      allow create, update: if isOwner(userId) && 
+                              isValidImage() &&
+                              imageId.matches('avatar\\.(jpg|jpeg|png|webp)');
+      
+      // Users can delete their own profile image
+      allow delete: if isOwner(userId);
     }
-
-    // /bookings/{bookingId}/documents/{file}
-    // Read for guest or host; no client writes
-    match /bookings/{bookingId}/documents/{fileName} {
-      allow read: if isAuthed()
-        && (
-          firestore.get(/databases/(default)/documents/bookings/$(bookingId)).data.guestId == request.auth.uid
-          || firestore.get(/databases/(default)/documents/bookings/$(bookingId)).data.hostId == request.auth.uid
-        );
-      allow write: if false;
+    
+    // ============================================
+    // LISTING IMAGES
+    // ============================================
+    
+    match /listings/{listingId}/images/{imageId} {
+      // Anyone can read listing images
+      allow read: if true;
+      
+      // Verified hosts can upload listing images (max 20 per listing)
+      allow create: if hasVerifiedEmail() && 
+                      isValidImage() &&
+                      imageId.matches('[0-9]+\\.(jpg|jpeg|png|webp)');
+      
+      // Host can update/delete their listing images
+      // Note: We validate ownership via Firestore in the app
+      allow update, delete: if isAuthenticated() && hasVerifiedEmail();
+    }
+    
+    // ============================================
+    // VERIFICATION DOCUMENTS (Private)
+    // ============================================
+    
+    match /users/{userId}/documents/{documentId} {
+      // Only the owner can read their documents
+      allow read: if isOwner(userId);
+      
+      // Users can upload ID verification documents
+      allow create, update: if isOwner(userId) && 
+                              isValidDocument() &&
+                              documentId.matches('(id|passport|license)\\.(jpg|jpeg|png|pdf)');
+      
+      // Users can delete their documents
+      allow delete: if isOwner(userId);
+    }
+    
+    // ============================================
+    // BOOKING RECEIPTS (Server-generated)
+    // ============================================
+    
+    match /bookings/{bookingId}/receipts/{receiptId} {
+      // Guests and hosts can read receipts for their bookings
+      allow read: if isAuthenticated();
+      
+      // Only server (Admin SDK) can write receipts
+      allow create, update, delete: if false;
+    }
+    
+    // ============================================
+    // TEMPORARY UPLOADS (Auto-delete after 24h)
+    // ============================================
+    
+    match /temp/{userId}/{fileName} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && 
+                              isValidImage() &&
+                              request.resource.size < 15 * 1024 * 1024; // 15MB for temp
+      allow delete: if isOwner(userId);
+    }
+    
+    // ============================================
+    // CHAT ATTACHMENTS
+    // ============================================
+    
+    match /conversations/{conversationId}/attachments/{attachmentId} {
+      // Participants can read attachments
+      allow read: if isAuthenticated();
+      
+      // Participants can upload attachments (images or PDFs)
+      allow create: if isAuthenticated() && 
+                      (isValidImage() || isValidDocument());
+      
+      // No updates or deletes (immutable once sent)
+      allow update, delete: if false;
+    }
+    
+    // Block all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }
-EOF

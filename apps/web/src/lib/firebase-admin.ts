@@ -1,52 +1,65 @@
-// apps/web/src/lib/firebase-admin.ts
-// Server-only Firebase Admin singleton for Next.js (App Router)
+/**
+ * Firebase Admin SDK for server-side operations
+ * Server-only - never import in client code
+ */
 
 import 'server-only';
-import { cert, getApps, initializeApp, type App } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
-import { getStorage } from 'firebase-admin/storage';
+import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
+import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import { getAuth, Auth } from 'firebase-admin/auth';
 
-function required(name: string): string {
-  const v = process.env[name];
-  if (!v) throw new Error(`Missing required env var: ${name}`);
-  return v;
+let app: App;
+let db: Firestore;
+let auth: Auth;
+
+// Initialize Firebase Admin
+if (getApps().length === 0) {
+  // Production: use service account from environment
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+    try {
+      const serviceAccount = JSON.parse(
+        process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+      );
+      
+      app = initializeApp({
+        credential: cert(serviceAccount),
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        databaseURL: `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseio.com`,
+      });
+      
+      console.log('[FIREBASE_ADMIN] Initialized with service account');
+    } catch (error) {
+      console.error('[FIREBASE_ADMIN] Failed to parse service account:', error);
+      throw new Error('Invalid FIREBASE_SERVICE_ACCOUNT_KEY');
+    }
+  } else if (process.env.NODE_ENV === 'production') {
+    // Production without service account - fail hard
+    throw new Error(
+      'FIREBASE_SERVICE_ACCOUNT_KEY is required in production. ' +
+      'Generate a service account key from Firebase Console > Project Settings > Service Accounts'
+    );
+  } else {
+    // Development: use application default credentials or emulator
+    console.warn('[FIREBASE_ADMIN] Using default credentials (development only)');
+    app = initializeApp({
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project',
+    });
+  }
+  
+  db = getFirestore(app);
+  auth = getAuth(app);
+  
+  // Set Firestore settings for production
+  if (process.env.NODE_ENV === 'production') {
+    db.settings({
+      ignoreUndefinedProperties: true,
+    });
+  }
+} else {
+  app = getApps()[0];
+  db = getFirestore(app);
+  auth = getAuth(app);
 }
 
-function normalizePrivateKey(raw: string): string {
-  // Supports keys stored with literal "\n" or real newlines
-  return raw.replace(/\\n/g, '\n');
-}
-
-function getBucketName(projectId: string): string {
-  // Prefer explicit public bucket env; otherwise fall back to default pattern
-  return (
-    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
-    `${projectId}.appspot.com`
-  );
-}
-
-function initAdmin(): App {
-  const existing = getApps()[0];
-  if (existing) return existing;
-
-  const projectId = required('FIREBASE_PROJECT_ID');
-  const clientEmail = required('FIREBASE_CLIENT_EMAIL');
-  const privateKey = normalizePrivateKey(required('FIREBASE_PRIVATE_KEY'));
-
-  return initializeApp({
-    credential: cert({ projectId, clientEmail, privateKey }),
-    storageBucket: getBucketName(projectId),
-  });
-}
-
-const app = initAdmin();
-
-// Firestore: keep behavior sane for partial objects
-const adminDb = getFirestore(app);
-adminDb.settings({ ignoreUndefinedProperties: true });
-
-const adminAuth = getAuth(app);
-const adminStorage = getStorage(app);
-
-export { adminDb, adminAuth, adminStorage };
+export { app, db, auth };
+export default app;

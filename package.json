@@ -1,31 +1,31 @@
 {
-  "name": "@enatbet/monorepo",
+  "name": "enatbet",
+  "version": "2.0.0",
   "private": true,
-  "packageManager": "pnpm@8.15.0",
-  "engines": {
-    "node": ">=20.0.0",
-    "pnpm": ">=8.15.0"
-  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "preinstall": "npx only-allow pnpm",
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "lint": "turbo lint",
-    "typecheck": "turbo typecheck",
-    "test": "turbo test",
-    "clean": "turbo clean && rm -rf node_modules",
-    "deploy:web": "turbo build --filter=@enatbet/web && vercel --prod --cwd apps/web",
-    "deploy:mobile:ios": "cd apps/mobile && eas build --platform ios --profile production --non-interactive",
-    "deploy:mobile:android": "cd apps/mobile && eas build --platform android --profile production --non-interactive",
-    "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes,storage:rules",
-    "db:backup": "gcloud firestore backups schedules create --recurrence=weekly --retention=4w",
-    "stripe:listen": "stripe listen --forward-to localhost:3000/api/stripe/webhook"
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=web",
+    "dev:mobile": "turbo run dev --filter=mobile",
+    "build": "turbo run build",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "eslint": "^8.56.0",
-    "prettier": "^3.2.0",
-    "turbo": "^1.12.0",
-    "typescript": "^5.3.0"
+    "@turbo/gen": "^2.3.3",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "firebase": "10.7.1"
+    }
   }
 }

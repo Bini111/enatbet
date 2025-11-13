@@ -1,0 +1,25 @@
+const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
+
+const projectRoot = __dirname;
+const monorepoRoot = path.resolve(projectRoot, '../..');
+
+const config = getDefaultConfig(projectRoot);
+
+// Monorepo: Watch all workspace packages
+config.watchFolders = [monorepoRoot];
+
+// Monorepo: Tell Metro where to find modules (handles hoisting)
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, 'node_modules'),
+  path.resolve(monorepoRoot, 'node_modules'),
+];
+
+// CRITICAL: Force CommonJS resolution to bypass ESM extension issues
+config.resolver.unstable_enablePackageExports = true;
+config.resolver.unstable_conditionNames = ['require', 'node', 'react-native', 'default'];
+
+// Prevent duplicate module resolution in monorepo
+config.resolver.disableHierarchicalLookup = true;
+
+module.exports = config;
