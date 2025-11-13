@@ -11,8 +11,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import type { Booking, BookingCreate, BookingPricing, Listing } from '@enatebet/shared';
-import { calculateBookingPrice } from '@enatebet/shared';
+import type { Booking, BookingCreate, BookingPricing } from '@enatebet/shared';
 
 /**
  * Booking Service

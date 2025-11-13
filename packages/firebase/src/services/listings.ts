@@ -16,6 +16,12 @@ import {
 import { db } from '../config/firebase';
 import type { Listing, ListingCreate } from '@enatebet/shared';
 
+// Define availability type locally since it's not exported from shared
+interface Availability {
+  blockedDates: Date[];
+  customAvailability: Record<string, any>;
+}
+
 /**
  * Listing Service
  * Handles property listing CRUD operations
@@ -34,12 +40,13 @@ const convertToListing = (docId: string, data: any): Listing => {
     amenities: data.amenities || [],
     images: data.images || [],
     pricing: data.pricing,
-    capacity: data.capacity,
-    rules: data.rules,
     availability: {
+      minNights: data.availability?.minNights || 1,
+      maxNights: data.availability?.maxNights || 365,
       blockedDates: (data.availability?.blockedDates || []).map((ts: Timestamp) => ts.toDate()),
-      customAvailability: data.availability?.customAvailability || {},
+      availableDates: (data.availability?.availableDates || []).map((ts: Timestamp) => ts.toDate()),
     },
+    rules: data.rules,
     status: data.status || 'active',
     stats: data.stats || {
       views: 0,

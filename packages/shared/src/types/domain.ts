@@ -320,3 +320,91 @@ export interface AnalyticsPayload {
   properties: Record<string, any>;
   timestamp: Date;
 }
+
+// ============================================================================
+// CREATE/UPDATE INPUT TYPES
+// ============================================================================
+
+// Listing Create/Update
+export interface ListingCreate {
+  title: string;
+  description: string;
+  propertyType: PropertyType;
+  roomType: RoomType;
+  location: Location;
+  amenities: Amenity[];
+  images: string[];
+  pricing: Pricing;
+  capacity: {
+    guests: number;
+    bedrooms: number;
+    beds: number;
+    bathrooms: number;
+  };
+  rules: ListingRules;
+}
+
+export type ListingUpdate = Partial<ListingCreate>;
+
+// Booking Create
+export interface BookingCreate {
+  listingId: string;
+  checkIn: Date;
+  checkOut: Date;
+  guests: GuestInfo;
+  specialRequests?: string;
+}
+
+// Review Create
+export interface ReviewCreate {
+  bookingId: string;
+  listingId: string;
+  ratings: Ratings;
+  comment: string;
+  photos?: string[];
+}
+
+// Message Create
+export interface MessageCreate {
+  conversationId: string;
+  text: string;
+  type?: MessageType;
+  metadata?: MessageMetadata;
+}
+
+// User Profile Update
+export interface UserProfileUpdate {
+  displayName?: string;
+  phoneNumber?: string;
+  photoURL?: string;
+  bio?: string;
+  languages?: string[];
+}
+
+// Notification
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  data?: Record<string, any>;
+  read: boolean;
+  createdAt: Date;
+}
+
+export type NotificationType =
+  | 'booking_confirmed'
+  | 'booking_cancelled'
+  | 'new_message'
+  | 'review_received'
+  | 'payment_received'
+  | 'booking_reminder'
+  | 'listing_approved';
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+export const SUPPORTED_CURRENCIES = ['USD', 'CAD', 'EUR', 'GBP', 'ETB'] as const;
+export type SupportedCurrency = typeof SUPPORTED_CURRENCIES[number];
