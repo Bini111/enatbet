@@ -1,0 +1,11 @@
+node_modules
+.next
+.expo
+dist
+build
+coverage
+*.log
+pnpm-lock.yaml
+package-lock.json
+*.min.js
+*.tsbuildinfo
