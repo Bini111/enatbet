@@ -1,3 +1,4 @@
+cat > firebase.json << 'EOF'
 {
   "firestore": {
     "rules": "firestore.rules",
@@ -5,21 +6,26 @@
   },
   "storage": {
     "rules": "storage.rules"
-  },
-  "emulators": {
-    "auth": {
-      "port": 9099
-    },
-    "firestore": {
-      "port": 8080
-    },
-    "storage": {
-      "port": 9199
-    },
-    "ui": {
-      "enabled": true,
-      "port": 4000
-    },
-    "singleProjectMode": true
   }
 }
+EOF
+
+echo "✅ Created firebase.json in root!"
+```
+
+## 3. Fix Vercel Deployment - Check Environment Variables:
+
+Your Vercel deployment is failing. Let's check if environment variables are set:
+
+**Go to Vercel Dashboard:**
+1. Click on your `enatbet` project
+2. Click **Settings** → **Environment Variables**
+3. Make sure you have ALL these variables set:
+```
+NEXT_PUBLIC_FIREBASE_API_KEY
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+NEXT_PUBLIC_FIREBASE_PROJECT_ID
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+NEXT_PUBLIC_FIREBASE_APP_ID
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
