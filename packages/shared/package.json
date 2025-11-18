@@ -1,23 +1,18 @@
 {
-  "name": "@enatbet/shared",
-  "version": "1.0.0",
-  "private": true,
-  "main": "./src/index.node.js",
-  "exports": {
-    "react-native": "./src/index.ts",
-    "default": "./src/index.node.js"
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "lib": ["ES2020"],
+    "moduleResolution": "node",
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node"]
   },
-  "scripts": {
-    "typecheck": "tsc --noEmit",
-    "build": "tsc"
-  },
-  "dependencies": {
-    "@upstash/ratelimit": "^1.0.1",
-    "@upstash/redis": "^1.28.1",
-    "zod": "^3.22.4"
-  },
-  "devDependencies": {
-    "@types/node": "^20.19.25",
-    "typescript": "^5.3.3"
-  }
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/__tests__"]
 }
