@@ -1,4 +1,16 @@
-// Shared UI components will be exported here
-// This is a placeholder to prevent TypeScript errors
+// UI Components - Shared across web and mobile applications
+export { Button } from './Button';
+export type { ButtonProps } from './Button';
 
-export const placeholder = 'UI package initialized';
+export { Input } from './Input';
+export type { InputProps } from './Input';
+
+export {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from './Card';
+export type { CardProps } from './Card';

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "123456789",
+    "firebase_url": "https://enatbet-demo.firebaseio.com",
+    "project_id": "enatbet-demo",
+    "storage_bucket": "enatbet-demo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123456789:android:abc123",
+        "android_client_info": {
+          "package_name": "app.enatbet.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDemoKeyForDevelopment"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ]
+}

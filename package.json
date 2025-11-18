@@ -1,6 +1,6 @@
 {
   "name": "enatbet",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -11,21 +11,37 @@
     "dev:web": "turbo run dev --filter=web",
     "dev:mobile": "turbo run dev --filter=mobile",
     "build": "turbo run build",
-    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules"
+    "build:packages": "turbo run build --filter=@enatbet/*",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules .turbo",
+    "clean:all": "find . -name 'node_modules' -type d -prune -exec rm -rf {} + && find . -name '.turbo' -type d -prune -exec rm -rf {} + && rm -f pnpm-lock.yaml"
   },
   "devDependencies": {
-    "@turbo/gen": "^2.3.3",
-    "prettier": "^3.4.2",
-    "turbo": "^2.3.3",
-    "typescript": "^5.7.2"
-  },
-  "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd",
-  "engines": {
-    "node": ">=20.0.0"
+    "turbo": "^2.3.0",
+    "typescript": "^5.3.3",
+    "prettier": "^3.1.0"
   },
   "pnpm": {
     "overrides": {
-      "firebase": "10.7.1"
+      "react": "18.2.0",
+      "react-dom": "18.2.0",
+      "react-native": "0.74.5",
+      "@react-native/gradle-plugin": "0.74.87",
+      "@types/react": "18.2.45",
+      "@types/react-native": "0.72.8"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "react",
+        "react-dom",
+        "react-native"
+      ]
     }
+  },
+  "packageManager": "pnpm@8.15.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
   }
 }

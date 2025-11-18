@@ -2,7 +2,6 @@
   "expo": {
     "name": "Enatbet",
     "slug": "enatbet",
-    "scheme": "enatbet",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,49 +9,21 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#E91E63"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "plugins": [
-      "expo-router",
-      [
-        "@stripe/stripe-react-native",
-        {
-          "merchantIdentifier": "merchant.com.bini.enatbet",
-          "enableGooglePay": true
-        }
-      ]
-    ],
+    "platforms": ["ios", "android"],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "bundleIdentifier": "com.bini.enatbet",
-      "buildNumber": "1",
       "supportsTablet": true,
-      "infoPlist": {
-        "NSCameraUsageDescription": "Take photos for your profile and listings",
-        "NSPhotoLibraryUsageDescription": "Choose photos for your profile and listings",
-        "NSPhotoLibraryAddUsageDescription": "Save photos to your library"
-      }
+      "bundleIdentifier": "app.enatbet.mobile"
     },
     "android": {
-      "package": "com.bini.enatbet",
-      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#E91E63"
       },
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.READ_MEDIA_IMAGES"
-      ]
+      "package": "app.enatbet.mobile"
     },
-    "web": {
-      "favicon": "./assets/favicon.png",
-      "bundler": "metro"
-    },
-    "experiments": {
-      "typedRoutes": true
-    }
+    "plugins": ["expo-router"]
   }
 }
