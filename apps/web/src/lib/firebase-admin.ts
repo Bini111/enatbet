@@ -61,8 +61,14 @@ if (getApps().length === 0) {
   auth = getAuth(app);
 }
 
-export { app, db as adminDb, auth as adminAuth };
+export { 
+  app, 
+  db, 
+  auth,
+  db as adminDb, 
+  auth as adminAuth 
+};
 export const adminStorage = () => {
-  throw new Error('Storage not yet implemented - use packages/firebase for storage operations');
+  throw new Error('Storage not yet implemented');
 };
 export default app;
