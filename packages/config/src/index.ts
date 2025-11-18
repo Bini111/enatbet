@@ -4,3 +4,5 @@ export const config = {
   platformFeePercentage: parseInt(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE || '10'),
   currency: process.env.NEXT_PUBLIC_CURRENCY || 'USD',
 };
+
+export const SERVICE_FEE_RATE = 0.10;
