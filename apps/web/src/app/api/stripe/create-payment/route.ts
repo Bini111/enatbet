@@ -142,9 +142,10 @@ export async function POST(request: NextRequest) {
       cleaningFeeMoney
     );
 
-    const validation = validateStripeCharge(
-      pricing.total.amount,
-      pricing.total.currency as any
+    const pricePerNightMoney: Money = {
+  amount: pricePerNight.amount,
+  currency: pricePerNight.currency as Money['currency'], // ✅ Type cast
+};
     );
 
     if (!validation.valid) {
