@@ -2,14 +2,14 @@ name: Mobile CI/CD
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, production-complete]
     paths:
       - 'apps/mobile/**'
       - 'packages/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/mobile-ci.yml'
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, production-complete]
     paths:
       - 'apps/mobile/**'
       - 'packages/**'

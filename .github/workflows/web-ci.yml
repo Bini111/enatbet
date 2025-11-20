@@ -2,14 +2,14 @@ name: Web CI/CD
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, production-complete]
     paths:
       - 'apps/web/**'
       - 'packages/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/web-ci.yml'
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, production-complete]
     paths:
       - 'apps/web/**'
       - 'packages/**'
