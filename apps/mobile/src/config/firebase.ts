@@ -3,12 +3,10 @@ import {
   Auth,
   initializeAuth,
   getReactNativePersistence,
-  connectAuthEmulator,
 } from "firebase/auth";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
-import { getStorage, connectStorageEmulator } from "firebase/storage";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Platform } from "react-native";
 
 // Runtime validation of required environment variables
 const requiredEnvVars = {
@@ -43,7 +41,6 @@ if (getApps().length === 0) {
 // Initialize auth only once with persistence
 let auth: Auth;
 try {
-  // Check if auth is already initialized
   const existingAuth = (app as any)._authInstance;
   if (existingAuth) {
     auth = existingAuth;
@@ -51,11 +48,9 @@ try {
     auth = initializeAuth(app, {
       persistence: getReactNativePersistence(AsyncStorage),
     });
-    // Store reference to prevent re-initialization
     (app as any)._authInstance = auth;
   }
 } catch (error) {
-  // If auth is already initialized, get the existing instance
   console.warn("Auth already initialized, using existing instance");
   auth = (app as any)._authInstance;
 }
@@ -63,16 +58,8 @@ try {
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Add this for development
-if (__DEV__) {
-  // iOS Simulator uses localhost
-  // Android Emulator uses 10.0.2.2
-  // Physical devices use your machine's LAN IP (e.g., 192.168.1.x)
-  const host = Platform.OS === "android" ? "10.0.2.2" : "localhost";
-
-  connectAuthEmulator(auth, `http://${host}:9099`);
-  connectFirestoreEmulator(db, host, 8080);
-  connectStorageEmulator(storage, host, 9199);
-}
+// NOTE: Emulator connections disabled for production testing
+// To use emulators, uncomment the code below and run:
+// firebase emulators:start
 
 export { app, auth, db, storage };
