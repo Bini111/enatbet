@@ -24,9 +24,32 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <Text variant="headlineMedium" style={styles.title}>
             Sign in to continue
           </Text>
-          <Button mode="contained" onPress={() => navigation.navigate("Login")}>
+          <Button mode="contained" onPress={() => navigation.navigate("Login")} style={styles.button}>
             Sign In
           </Button>
+          <Button mode="outlined" onPress={() => navigation.navigate("SignUp")} style={styles.button}>
+            Create Account
+          </Button>
+
+          {/* Legal Links for Non-Logged In Users */}
+          <Divider style={styles.divider} />
+          <List.Section>
+            <List.Item
+              title="About Enatbet"
+              left={(props) => <List.Icon {...props} icon="information" />}
+              onPress={() => navigation.navigate("About")}
+            />
+            <List.Item
+              title="Privacy Policy"
+              left={(props) => <List.Icon {...props} icon="shield-lock" />}
+              onPress={() => navigation.navigate("PrivacyPolicy")}
+            />
+            <List.Item
+              title="Terms of Service"
+              left={(props) => <List.Icon {...props} icon="file-document" />}
+              onPress={() => navigation.navigate("TermsOfService")}
+            />
+          </List.Section>
         </View>
       </View>
     );
@@ -69,6 +92,27 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         />
       </List.Section>
 
+      <Divider />
+
+      {/* Legal Links for Logged In Users */}
+      <List.Section>
+        <List.Item
+          title="About Enatbet"
+          left={(props) => <List.Icon {...props} icon="information" />}
+          onPress={() => navigation.navigate("About")}
+        />
+        <List.Item
+          title="Privacy Policy"
+          left={(props) => <List.Icon {...props} icon="shield-lock" />}
+          onPress={() => navigation.navigate("PrivacyPolicy")}
+        />
+        <List.Item
+          title="Terms of Service"
+          left={(props) => <List.Icon {...props} icon="file-document" />}
+          onPress={() => navigation.navigate("TermsOfService")}
+        />
+      </List.Section>
+
       <View style={styles.footer}>
         <Button mode="outlined" onPress={handleSignOut}>
           Sign Out
@@ -103,6 +147,14 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: 24,
+  },
+  button: {
+    marginTop: 12,
+    width: "100%",
+  },
+  divider: {
+    marginTop: 32,
+    marginBottom: 16,
   },
   footer: {
     padding: 16,
