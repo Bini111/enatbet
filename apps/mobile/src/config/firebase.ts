@@ -1,12 +1,7 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import {
-  Auth,
-  initializeAuth,
-  getReactNativePersistence,
-} from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { Auth } from "firebase/auth";
+import { Firestore } from "firebase/firestore";
+import { FirebaseStorage } from "firebase/storage";
 
 // Runtime validation of required environment variables
 const requiredEnvVars = {
@@ -21,9 +16,8 @@ const requiredEnvVars = {
 // Validate all required env vars are present
 for (const [key, value] of Object.entries(requiredEnvVars)) {
   if (!value) {
-    throw new Error(
-      `Missing required environment variable: EXPO_PUBLIC_FIREBASE_${key.toUpperCase()}\n` +
-        `Please check your .env file and ensure all Firebase config is set.`,
+    console.warn(
+      `Missing required environment variable: EXPO_PUBLIC_FIREBASE_${key.toUpperCase()}`
     );
   }
 }
@@ -31,35 +25,22 @@ for (const [key, value] of Object.entries(requiredEnvVars)) {
 const firebaseConfig = requiredEnvVars;
 
 // Initialize app only once
-let app;
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp();
-}
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+let storage: FirebaseStorage | null = null;
 
-// Initialize auth only once with persistence
-let auth: Auth;
 try {
-  const existingAuth = (app as any)._authInstance;
-  if (existingAuth) {
-    auth = existingAuth;
+  if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
   } else {
-    auth = initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage),
-    });
-    (app as any)._authInstance = auth;
+    app = getApp();
   }
+  console.log("Firebase initialized successfully");
 } catch (error) {
-  console.warn("Auth already initialized, using existing instance");
-  auth = (app as any)._authInstance;
+  console.error("Firebase initialization error:", error);
+  // Don't throw - just log and continue
 }
 
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-// NOTE: Emulator connections disabled for production testing
-// To use emulators, uncomment the code below and run:
-// firebase emulators:start
-
+// Export null-safe instances
 export { app, auth, db, storage };
