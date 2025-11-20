@@ -15,6 +15,9 @@ import { FavoritesScreen } from "../screens/FavoritesScreen";
 import { MessagesScreen } from "../screens/MessagesScreen";
 import { ChatScreen } from "../screens/ChatScreen";
 import { MyBookingsScreen } from "../screens/MyBookingsScreen";
+import AboutScreen from "../screens/AboutScreen";
+import PrivacyPolicyScreen from "../screens/PrivacyPolicyScreen";
+import TermsOfServiceScreen from "../screens/TermsOfServiceScreen";
 
 import { RootStackParamList, TabParamList } from "./types";
 
@@ -102,6 +105,9 @@ export default function AppNavigator() {
         />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
+        <Stack.Screen name="About" component={AboutScreen} />
+        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+        <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
