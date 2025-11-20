@@ -31,7 +31,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             Create Account
           </Button>
 
-          {/* Legal Links for Non-Logged In Users */}
           <Divider style={styles.divider} />
           <List.Section>
             <List.Item
@@ -94,7 +93,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
       <Divider />
 
-      {/* Legal Links for Logged In Users */}
       <List.Section>
         <List.Item
           title="About Enatbet"
