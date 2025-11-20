@@ -6,8 +6,14 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation/types";
 
-export default function HomeScreen() {
+type HomeScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, "Home">;
+};
+
+export default function HomeScreen({ navigation }: HomeScreenProps) {
   return (
     <ScrollView style={styles.container} bounces={false}>
       {/* Hero Section */}
@@ -23,7 +29,10 @@ export default function HomeScreen() {
           Connecting Ethiopian & Eritrean diaspora communities worldwide
         </Text>
 
-        <TouchableOpacity style={styles.exploreButton}>
+        <TouchableOpacity 
+          style={styles.exploreButton}
+          onPress={() => navigation.navigate("Search")}
+        >
           <Text style={styles.exploreButtonText}>Start Exploring</Text>
         </TouchableOpacity>
       </View>
@@ -65,13 +74,20 @@ export default function HomeScreen() {
         <Text style={styles.ctaSubtitle}>
           Join thousands in our global Ethiopian & Eritrean community
         </Text>
-
         <View style={styles.ctaButtons}>
-          <TouchableOpacity style={styles.findHomeButton}>
-            <Text style={styles.findHomeButtonText}>Find a Home</Text>
+          <TouchableOpacity 
+            style={styles.ctaButton}
+            onPress={() => navigation.navigate("Search")}
+          >
+            <Text style={styles.ctaButtonText}>Find a Home</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.listHomeButton}>
-            <Text style={styles.listHomeButtonText}>List Your Home</Text>
+          <TouchableOpacity 
+            style={[styles.ctaButton, styles.ctaButtonSecondary]}
+            onPress={() => navigation.navigate("Login")}
+          >
+            <Text style={[styles.ctaButtonText, styles.ctaButtonTextSecondary]}>
+              List Your Home
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -82,85 +98,82 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
   },
   hero: {
-    backgroundColor: "#ec4899",
-    paddingTop: 80,
+    backgroundColor: "#E91E8C",
+    paddingTop: 60,
     paddingBottom: 40,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     alignItems: "center",
   },
   flagContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   flag: {
-    fontSize: 50,
-    marginHorizontal: 10,
+    fontSize: 40,
   },
   logo: {
     fontSize: 48,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#FFFFFF",
+    marginHorizontal: 16,
     letterSpacing: 2,
   },
   tagline: {
     fontSize: 24,
-    color: "#fff",
     fontStyle: "italic",
-    fontWeight: "600",
-    marginBottom: 10,
+    color: "#FFFFFF",
     textAlign: "center",
+    marginBottom: 16,
   },
   subtitle: {
     fontSize: 16,
-    color: "#fff",
+    color: "#FFFFFF",
     textAlign: "center",
-    marginBottom: 30,
-    paddingHorizontal: 20,
+    marginBottom: 32,
   },
   exploreButton: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 32,
+    backgroundColor: "#FFFFFF",
     paddingVertical: 16,
-    borderRadius: 8,
+    paddingHorizontal: 48,
+    borderRadius: 12,
   },
   exploreButtonText: {
-    color: "#ec4899",
+    color: "#E91E8C",
     fontSize: 18,
     fontWeight: "600",
   },
   featuresSection: {
-    paddingVertical: 40,
-    paddingHorizontal: 20,
+    padding: 24,
   },
   sectionTitle: {
     fontSize: 28,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 30,
-    color: "#111",
+    marginBottom: 32,
+    color: "#1a1a1a",
   },
   featureCard: {
-    borderWidth: 1,
-    borderColor: "#e5e5e5",
-    borderRadius: 8,
+    backgroundColor: "#FFFFFF",
     padding: 24,
+    borderRadius: 16,
     marginBottom: 16,
     alignItems: "center",
-    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
   },
   featureIcon: {
     fontSize: 48,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   featureTitle: {
     fontSize: 20,
     fontWeight: "600",
     marginBottom: 8,
-    color: "#111",
+    color: "#1a1a1a",
   },
   featureText: {
     fontSize: 16,
@@ -168,48 +181,44 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   ctaSection: {
-    backgroundColor: "#f0fdf4",
-    paddingVertical: 40,
-    paddingHorizontal: 20,
+    backgroundColor: "#f0f9ff",
+    padding: 32,
     alignItems: "center",
   },
   ctaTitle: {
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 12,
-    color: "#111",
+    marginBottom: 16,
+    color: "#1a1a1a",
   },
   ctaSubtitle: {
     fontSize: 16,
     color: "#666",
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: 32,
   },
   ctaButtons: {
     flexDirection: "row",
+    gap: 16,
   },
-  findHomeButton: {
-    backgroundColor: "#ec4899",
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    borderRadius: 8,
-    marginRight: 10,
+  ctaButton: {
+    backgroundColor: "#E91E8C",
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
   },
-  findHomeButtonText: {
-    color: "#fff",
+  ctaButtonSecondary: {
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: "#1a1a1a",
+  },
+  ctaButtonText: {
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
   },
-  listHomeButton: {
-    backgroundColor: "#1f2937",
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    borderRadius: 8,
-  },
-  listHomeButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+  ctaButtonTextSecondary: {
+    color: "#1a1a1a",
   },
 });
