@@ -11,6 +11,9 @@ export type RootStackParamList = {
   Chat: { conversationId: string };
   Login: undefined;
   SignUp: undefined;
+  About: undefined;
+  PrivacyPolicy: undefined;
+  TermsOfService: undefined;
 };
 
 export type TabParamList = {
