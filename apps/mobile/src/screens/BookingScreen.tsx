@@ -1,29 +1,32 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Button, TextInput } from 'react-native-paper';
-import { usePropertyStore } from '../store/propertyStore';
-import { useBookingStore } from '../store/bookingStore';
-import { useAuthStore } from '../store/authStore';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/types';
+import React, { useState } from "react";
+import { View, StyleSheet, ScrollView } from "react-native";
+import { Text, Button, TextInput } from "react-native-paper";
+import { usePropertyStore } from "../store/propertyStore";
+import { useBookingStore } from "../store/bookingStore";
+import { useAuthStore } from "../store/authStore";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RouteProp } from "@react-navigation/native";
+import { RootStackParamList } from "../navigation/types";
 
 type BookingScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Booking'>;
-  route: RouteProp<RootStackParamList, 'Booking'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, "Booking">;
+  route: RouteProp<RootStackParamList, "Booking">;
 };
 
-export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route }) => {
+export const BookingScreen: React.FC<BookingScreenProps> = ({
+  navigation,
+  route,
+}) => {
   const { propertyId } = route.params;
   const { getPropertyById } = usePropertyStore();
   const { createBooking, isLoading } = useBookingStore();
   const { user } = useAuthStore();
-  
+
   const property = getPropertyById(propertyId);
-  
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
-  const [guests, setGuests] = useState('1');
+
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [guests, setGuests] = useState("1");
 
   const handleBooking = async () => {
     if (!user || !property) return;
@@ -37,12 +40,12 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
         checkOut: new Date(checkOut),
         guests: parseInt(guests),
         totalPrice: property.pricePerNight * 2, // Calculate based on dates
-        status: 'pending',
+        status: "pending",
       });
 
-      navigation.navigate('BookingConfirmation', { bookingId });
+      navigation.navigate("BookingConfirmation", { bookingId });
     } catch (error) {
-      console.error('Booking error:', error);
+      console.error("Booking error:", error);
     }
   };
 
@@ -114,34 +117,34 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   content: {
     padding: 16,
   },
   title: {
     marginBottom: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   propertyTitle: {
     marginBottom: 24,
-    color: '#717171',
+    color: "#717171",
   },
   input: {
     marginBottom: 16,
   },
   priceSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginVertical: 24,
     padding: 16,
-    backgroundColor: '#F7F7F7',
+    backgroundColor: "#F7F7F7",
     borderRadius: 8,
   },
   price: {
-    fontWeight: 'bold',
-    color: '#FF385C',
+    fontWeight: "bold",
+    color: "#FF385C",
   },
   button: {
     marginTop: 16,

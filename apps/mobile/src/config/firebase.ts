@@ -1,9 +1,14 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { Auth, initializeAuth, getReactNativePersistence, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
+import { initializeApp, getApps, getApp } from "firebase/app";
+import {
+  Auth,
+  initializeAuth,
+  getReactNativePersistence,
+  connectAuthEmulator,
+} from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 
 // Runtime validation of required environment variables
 const requiredEnvVars = {
@@ -20,7 +25,7 @@ for (const [key, value] of Object.entries(requiredEnvVars)) {
   if (!value) {
     throw new Error(
       `Missing required environment variable: EXPO_PUBLIC_FIREBASE_${key.toUpperCase()}\n` +
-      `Please check your .env file and ensure all Firebase config is set.`
+        `Please check your .env file and ensure all Firebase config is set.`,
     );
   }
 }
@@ -44,14 +49,14 @@ try {
     auth = existingAuth;
   } else {
     auth = initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage)
+      persistence: getReactNativePersistence(AsyncStorage),
     });
     // Store reference to prevent re-initialization
     (app as any)._authInstance = auth;
   }
 } catch (error) {
   // If auth is already initialized, get the existing instance
-  console.warn('Auth already initialized, using existing instance');
+  console.warn("Auth already initialized, using existing instance");
   auth = (app as any)._authInstance;
 }
 
@@ -63,8 +68,8 @@ if (__DEV__) {
   // iOS Simulator uses localhost
   // Android Emulator uses 10.0.2.2
   // Physical devices use your machine's LAN IP (e.g., 192.168.1.x)
-  const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-  
+  const host = Platform.OS === "android" ? "10.0.2.2" : "localhost";
+
   connectAuthEmulator(auth, `http://${host}:9099`);
   connectFirestoreEmulator(db, host, 8080);
   connectStorageEmulator(storage, host, 9199);

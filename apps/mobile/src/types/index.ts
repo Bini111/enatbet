@@ -3,7 +3,7 @@ export interface User {
   email: string;
   displayName: string;
   photoURL?: string;
-  role: 'guest' | 'host' | 'admin';
+  role: "guest" | "host" | "admin";
   createdAt: Date;
 }
 
@@ -29,7 +29,7 @@ export interface Property {
   bathrooms: number;
   rating?: number;
   reviewCount?: number;
-  status: 'active' | 'inactive' | 'pending';
+  status: "active" | "inactive" | "pending";
   createdAt: Date;
 }
 
@@ -42,7 +42,7 @@ export interface Booking {
   checkOut: Date;
   guests: number;
   totalPrice: number;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  status: "pending" | "confirmed" | "cancelled" | "completed";
   paymentIntentId?: string;
   createdAt: Date;
 }

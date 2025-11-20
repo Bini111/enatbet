@@ -1,33 +1,47 @@
-import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Alert,
+} from "react-native";
+import { useRouter } from "expo-router";
 
 export default function Signup() {
   const router = useRouter();
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({ fullName: '', email: '', password: '' });
+  const [errors, setErrors] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+  });
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
   const handleSignup = async () => {
-    setErrors({ fullName: '', email: '', password: '' });
+    setErrors({ fullName: "", email: "", password: "" });
 
-    const newErrors = { fullName: '', email: '', password: '' };
-    if (!fullName.trim()) newErrors.fullName = 'Full name is required';
+    const newErrors = { fullName: "", email: "", password: "" };
+    if (!fullName.trim()) newErrors.fullName = "Full name is required";
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!validateEmail(email)) {
-      newErrors.email = 'Invalid email format';
+      newErrors.email = "Invalid email format";
     }
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     if (newErrors.fullName || newErrors.email || newErrors.password) {
@@ -38,19 +52,19 @@ export default function Signup() {
     setLoading(true);
     try {
       // TODO: Add Firebase auth here
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      Alert.alert('Success', 'Account created! Please sign in.');
-      router.replace('/login');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      Alert.alert("Success", "Account created! Please sign in.");
+      router.replace("/login");
     } catch (error: any) {
-      Alert.alert('Signup Failed', error.message || 'Please try again');
+      Alert.alert("Signup Failed", error.message || "Please try again");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -69,7 +83,9 @@ export default function Signup() {
               onChangeText={setFullName}
               autoComplete="name"
             />
-            {errors.fullName ? <Text style={styles.errorText}>{errors.fullName}</Text> : null}
+            {errors.fullName ? (
+              <Text style={styles.errorText}>{errors.fullName}</Text>
+            ) : null}
           </View>
 
           <View style={styles.inputGroup}>
@@ -83,7 +99,9 @@ export default function Signup() {
               keyboardType="email-address"
               autoComplete="email"
             />
-            {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+            {errors.email ? (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            ) : null}
           </View>
 
           <View style={styles.inputGroup}>
@@ -96,29 +114,32 @@ export default function Signup() {
               secureTextEntry
               autoComplete="password-new"
             />
-            {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
+            {errors.password ? (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            ) : null}
           </View>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleSignup}
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? 'Creating Account...' : 'Sign Up'}
+              {loading ? "Creating Account..." : "Sign Up"}
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.linkButton}
-            onPress={() => router.push('/login')}
+            onPress={() => router.push("/login")}
           >
             <Text style={styles.linkText}>
-              Already have an account? <Text style={styles.linkHighlight}>Sign In</Text>
+              Already have an account?{" "}
+              <Text style={styles.linkHighlight}>Sign In</Text>
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.linkButton}
             onPress={() => router.back()}
           >
@@ -131,34 +152,39 @@ export default function Signup() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 24 },
-  header: { marginBottom: 32, alignItems: 'center' },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#1a1a1a', marginBottom: 8 },
-  subtitle: { fontSize: 16, color: '#666' },
+  container: { flex: 1, backgroundColor: "#fff" },
+  scrollContent: { flexGrow: 1, justifyContent: "center", padding: 24 },
+  header: { marginBottom: 32, alignItems: "center" },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    marginBottom: 8,
+  },
+  subtitle: { fontSize: 16, color: "#666" },
   form: { gap: 16 },
   inputGroup: { gap: 8 },
-  label: { fontSize: 14, fontWeight: '600', color: '#333' },
-  input: { 
-    borderWidth: 1, 
-    borderColor: '#ddd', 
-    borderRadius: 8, 
+  label: { fontSize: 14, fontWeight: "600", color: "#333" },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
     padding: 16,
     fontSize: 16,
-    backgroundColor: '#fff'
+    backgroundColor: "#fff",
   },
-  inputError: { borderColor: '#dc2626' },
-  errorText: { fontSize: 14, color: '#dc2626' },
-  button: { 
-    backgroundColor: '#667eea', 
-    padding: 16, 
-    borderRadius: 8, 
+  inputError: { borderColor: "#dc2626" },
+  errorText: { fontSize: 14, color: "#dc2626" },
+  button: {
+    backgroundColor: "#667eea",
+    padding: 16,
+    borderRadius: 8,
     marginTop: 8,
-    alignItems: 'center'
+    alignItems: "center",
   },
-  buttonDisabled: { backgroundColor: '#9ca3af' },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
-  linkButton: { alignItems: 'center', marginTop: 16 },
-  linkText: { color: '#666', fontSize: 16 },
-  linkHighlight: { color: '#667eea', fontWeight: '600' },
+  buttonDisabled: { backgroundColor: "#9ca3af" },
+  buttonText: { color: "#fff", fontSize: 18, fontWeight: "600" },
+  linkButton: { alignItems: "center", marginTop: 16 },
+  linkText: { color: "#666", fontSize: 16 },
+  linkHighlight: { color: "#667eea", fontWeight: "600" },
 });

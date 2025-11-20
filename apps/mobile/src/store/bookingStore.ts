@@ -1,12 +1,14 @@
-import { create } from 'zustand';
-import { Booking } from '../types';
+import { create } from "zustand";
+import { Booking } from "../types";
 
 interface BookingState {
   bookings: Booking[];
   isLoading: boolean;
   error: string | null;
-  
-  createBooking: (booking: Omit<Booking, 'id' | 'createdAt'>) => Promise<string>;
+
+  createBooking: (
+    booking: Omit<Booking, "id" | "createdAt">,
+  ) => Promise<string>;
   fetchUserBookings: (userId: string) => Promise<void>;
 }
 
@@ -25,12 +27,12 @@ export const useBookingStore = create<BookingState>((set) => ({
         ...bookingData,
         createdAt: new Date(),
       };
-      
+
       set((state) => ({
         bookings: [...state.bookings, newBooking],
         isLoading: false,
       }));
-      
+
       return bookingId;
     } catch (error: any) {
       set({ error: error.message, isLoading: false });

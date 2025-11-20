@@ -1,17 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, Image } from 'react-native';
-import { Text, Button, Chip, Divider } from 'react-native-paper';
-import { usePropertyStore } from '../store/propertyStore';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/types';
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, ScrollView, Image } from "react-native";
+import { Text, Button, Chip, Divider } from "react-native-paper";
+import { usePropertyStore } from "../store/propertyStore";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RouteProp } from "@react-navigation/native";
+import { RootStackParamList } from "../navigation/types";
 
 type PropertyDetailsScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'PropertyDetails'>;
-  route: RouteProp<RootStackParamList, 'PropertyDetails'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, "PropertyDetails">;
+  route: RouteProp<RootStackParamList, "PropertyDetails">;
 };
 
-export const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({ navigation, route }) => {
+export const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({
+  navigation,
+  route,
+}) => {
   const { propertyId } = route.params;
   const { getPropertyById } = usePropertyStore();
   const property = getPropertyById(propertyId);
@@ -26,8 +29,10 @@ export const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({ na
 
   return (
     <ScrollView style={styles.container}>
-      <Image 
-        source={{ uri: property.images[0] || 'https://via.placeholder.com/400x300' }}
+      <Image
+        source={{
+          uri: property.images[0] || "https://via.placeholder.com/400x300",
+        }}
         style={styles.image}
       />
 
@@ -37,13 +42,20 @@ export const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({ na
         </Text>
 
         <Text variant="bodyLarge" style={styles.location}>
-          {property.location.address}, {property.location.city}, {property.location.country}
+          {property.location.address}, {property.location.city},{" "}
+          {property.location.country}
         </Text>
 
         <View style={styles.specs}>
-          <Chip icon="bed" style={styles.chip}>{property.bedrooms} Bedrooms</Chip>
-          <Chip icon="shower" style={styles.chip}>{property.bathrooms} Bathrooms</Chip>
-          <Chip icon="account-group" style={styles.chip}>Up to {property.maxGuests} guests</Chip>
+          <Chip icon="bed" style={styles.chip}>
+            {property.bedrooms} Bedrooms
+          </Chip>
+          <Chip icon="shower" style={styles.chip}>
+            {property.bathrooms} Bathrooms
+          </Chip>
+          <Chip icon="account-group" style={styles.chip}>
+            Up to {property.maxGuests} guests
+          </Chip>
         </View>
 
         <Divider style={styles.divider} />
@@ -77,10 +89,12 @@ export const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({ na
             </Text>
             <Text variant="bodyMedium">per night</Text>
           </View>
-          
-          <Button 
-            mode="contained" 
-            onPress={() => navigation.navigate('Booking', { propertyId: property.id })}
+
+          <Button
+            mode="contained"
+            onPress={() =>
+              navigation.navigate("Booking", { propertyId: property.id })
+            }
             style={styles.bookButton}
           >
             Reserve
@@ -94,26 +108,26 @@ export const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({ na
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   image: {
-    width: '100%',
+    width: "100%",
     height: 300,
   },
   content: {
     padding: 16,
   },
   title: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   location: {
-    color: '#717171',
+    color: "#717171",
     marginBottom: 16,
   },
   specs: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
     marginBottom: 16,
   },
@@ -124,15 +138,15 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   sectionTitle: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   description: {
     lineHeight: 24,
   },
   amenities: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   amenityChip: {
@@ -140,13 +154,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   priceSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 16,
   },
   price: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   bookButton: {
     paddingHorizontal: 24,

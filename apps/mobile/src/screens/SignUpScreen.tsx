@@ -1,25 +1,25 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
-import { useAuthStore } from '../store/authStore';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import React, { useState } from "react";
+import { View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import { Text, TextInput, Button, Snackbar } from "react-native-paper";
+import { useAuthStore } from "../store/authStore";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation/types";
 
 type SignUpScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'SignUp'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, "SignUp">;
 };
 
 export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
-  const [displayName, setDisplayName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const { signUp, isLoading, error, clearError } = useAuthStore();
 
   const handleSignUp = async () => {
     try {
       await signUp(email, password, displayName);
-      navigation.navigate('Home');
+      navigation.navigate("Home");
     } catch (err) {
       // Error handled by store
     }
@@ -27,7 +27,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
       <View style={styles.content}>
@@ -64,7 +64,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
           secureTextEntry={!showPassword}
           right={
             <TextInput.Icon
-              icon={showPassword ? 'eye-off' : 'eye'}
+              icon={showPassword ? "eye-off" : "eye"}
               onPress={() => setShowPassword(!showPassword)}
             />
           }
@@ -90,11 +90,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
         </Button>
       </View>
 
-      <Snackbar
-        visible={!!error}
-        onDismiss={clearError}
-        duration={3000}
-      >
+      <Snackbar visible={!!error} onDismiss={clearError} duration={3000}>
         {error}
       </Snackbar>
     </KeyboardAvoidingView>
@@ -104,19 +100,19 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   content: {
     flex: 1,
     padding: 24,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   title: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   subtitle: {
-    color: '#717171',
+    color: "#717171",
     marginBottom: 32,
   },
   input: {

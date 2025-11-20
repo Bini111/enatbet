@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,9 +8,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-} from 'react-native';
-import { useAuthStore } from '../stores/authStore';
-import { useMessageStore } from '../stores/messageStore';
+} from "react-native";
+import { useAuthStore } from "../stores/authStore";
+import { useMessageStore } from "../stores/messageStore";
 
 export const ChatScreen = ({ route }: any) => {
   const { conversationId } = route.params;
@@ -23,7 +23,7 @@ export const ChatScreen = ({ route }: any) => {
     unsubscribeAll,
   } = useMessageStore();
 
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState("");
 
   useEffect(() => {
     if (conversationId) {
@@ -44,9 +44,9 @@ export const ChatScreen = ({ route }: any) => {
 
     try {
       await sendMessage(conversationId, user.id, inputText.trim());
-      setInputText('');
+      setInputText("");
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
     }
   };
 
@@ -75,8 +75,8 @@ export const ChatScreen = ({ route }: any) => {
           ]}
         >
           {new Date(item.createdAt).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
+            hour: "2-digit",
+            minute: "2-digit",
           })}
         </Text>
       </View>
@@ -86,7 +86,7 @@ export const ChatScreen = ({ route }: any) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={90}
     >
       <FlatList
@@ -123,54 +123,54 @@ export const ChatScreen = ({ route }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   messagesList: {
     padding: 16,
   },
   messageBubble: {
-    maxWidth: '80%',
+    maxWidth: "80%",
     padding: 12,
     borderRadius: 16,
     marginBottom: 12,
   },
   myMessage: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#FF385C',
+    alignSelf: "flex-end",
+    backgroundColor: "#FF385C",
   },
   theirMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#f0f0f0',
+    alignSelf: "flex-start",
+    backgroundColor: "#f0f0f0",
   },
   messageText: {
     fontSize: 16,
     marginBottom: 4,
   },
   myMessageText: {
-    color: '#fff',
+    color: "#fff",
   },
   theirMessageText: {
-    color: '#000',
+    color: "#000",
   },
   timestamp: {
     fontSize: 11,
   },
   myTimestamp: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: "rgba(255, 255, 255, 0.7)",
   },
   theirTimestamp: {
-    color: '#999',
+    color: "#999",
   },
   inputContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
-    alignItems: 'flex-end',
+    borderTopColor: "#eee",
+    alignItems: "flex-end",
   },
   input: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -178,17 +178,17 @@ const styles = StyleSheet.create({
     maxHeight: 100,
   },
   sendButton: {
-    backgroundColor: '#FF385C',
+    backgroundColor: "#FF385C",
     borderRadius: 20,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   sendButtonDisabled: {
     opacity: 0.5,
   },
   sendButtonText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
 });

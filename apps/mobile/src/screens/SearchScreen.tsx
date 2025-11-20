@@ -1,19 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
-import { Text, Searchbar } from 'react-native-paper';
-import { usePropertyStore } from '../store/propertyStore';
-import { PropertyCard } from '../components/property/PropertyCard';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/types';
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, FlatList } from "react-native";
+import { Text, Searchbar } from "react-native-paper";
+import { usePropertyStore } from "../store/propertyStore";
+import { PropertyCard } from "../components/property/PropertyCard";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RouteProp } from "@react-navigation/native";
+import { RootStackParamList } from "../navigation/types";
 
 type SearchScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Search'>;
-  route: RouteProp<RootStackParamList, 'Search'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, "Search">;
+  route: RouteProp<RootStackParamList, "Search">;
 };
 
-export const SearchScreen: React.FC<SearchScreenProps> = ({ navigation, route }) => {
-  const [searchQuery, setSearchQuery] = useState(route.params?.location || '');
+export const SearchScreen: React.FC<SearchScreenProps> = ({
+  navigation,
+  route,
+}) => {
+  const [searchQuery, setSearchQuery] = useState(route.params?.location || "");
   const { properties, fetchProperties, isLoading } = usePropertyStore();
 
   useEffect(() => {
@@ -36,7 +39,9 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ navigation, route })
         renderItem={({ item }) => (
           <PropertyCard
             property={item}
-            onPress={() => navigation.navigate('PropertyDetails', { propertyId: item.id })}
+            onPress={() =>
+              navigation.navigate("PropertyDetails", { propertyId: item.id })
+            }
           />
         )}
         keyExtractor={(item) => item.id}
@@ -54,7 +59,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ navigation, route })
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   searchBar: {
     margin: 16,
@@ -65,8 +70,8 @@ const styles = StyleSheet.create({
   },
   empty: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 32,
   },
 });

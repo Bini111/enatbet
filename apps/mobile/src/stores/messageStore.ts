@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { Conversation, Message } from '@enatbet/shared';
+import { create } from "zustand";
+import { Conversation, Message } from "@enatbet/shared";
 import {
   getUserConversations,
   getMessages,
@@ -8,8 +8,8 @@ import {
   markAsRead,
   listenToMessages,
   listenToConversations,
-} from '@enatbet/firebase';
-import { Unsubscribe } from 'firebase/firestore';
+} from "@enatbet/firebase";
+import { Unsubscribe } from "firebase/firestore";
 
 interface MessageState {
   conversations: Conversation[];
@@ -25,8 +25,16 @@ interface MessageState {
   // Actions
   fetchConversations: (userId: string) => Promise<void>;
   fetchMessages: (conversationId: string) => Promise<void>;
-  sendMessage: (conversationId: string, senderId: string, content: string) => Promise<void>;
-  createConversation: (participants: string[], listingId: string, initialMessage?: string) => Promise<string>;
+  sendMessage: (
+    conversationId: string,
+    senderId: string,
+    content: string,
+  ) => Promise<void>;
+  createConversation: (
+    participants: string[],
+    listingId: string,
+    initialMessage?: string,
+  ) => Promise<string>;
   markAsRead: (conversationId: string, userId: string) => Promise<void>;
   subscribeToConversations: (userId: string) => void;
   subscribeToMessages: (conversationId: string) => void;
@@ -63,7 +71,11 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     }
   },
 
-  sendMessage: async (conversationId: string, senderId: string, content: string) => {
+  sendMessage: async (
+    conversationId: string,
+    senderId: string,
+    content: string,
+  ) => {
     set({ error: null });
     try {
       await sendMessage(conversationId, senderId, content);
@@ -73,7 +85,11 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     }
   },
 
-  createConversation: async (participants: string[], listingId: string, initialMessage?: string) => {
+  createConversation: async (
+    participants: string[],
+    listingId: string,
+    initialMessage?: string,
+  ) => {
     set({ isLoading: true, error: null });
     try {
       const conversationId = await createConversation({
@@ -93,7 +109,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     try {
       await markAsRead(conversationId, userId);
     } catch (error: any) {
-      console.error('Error marking as read:', error);
+      console.error("Error marking as read:", error);
     }
   },
 

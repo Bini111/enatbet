@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -6,18 +6,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-} from 'react-native';
-import { useAuthStore } from '../stores/authStore';
-import { useMessageStore } from '../stores/messageStore';
+} from "react-native";
+import { useAuthStore } from "../stores/authStore";
+import { useMessageStore } from "../stores/messageStore";
 
 export const MessagesScreen = ({ navigation }: any) => {
   const { user } = useAuthStore();
-  const {
-    conversations,
-    isLoading,
-    subscribeToConversations,
-    unsubscribeAll,
-  } = useMessageStore();
+  const { conversations, isLoading, subscribeToConversations, unsubscribeAll } =
+    useMessageStore();
 
   useEffect(() => {
     if (user) {
@@ -35,9 +31,7 @@ export const MessagesScreen = ({ navigation }: any) => {
     return (
       <TouchableOpacity
         style={styles.conversationCard}
-        onPress={() =>
-          navigation.navigate('Chat', { conversationId: item.id })
-        }
+        onPress={() => navigation.navigate("Chat", { conversationId: item.id })}
       >
         <View style={styles.conversationContent}>
           <View style={styles.conversationHeader}>
@@ -98,69 +92,69 @@ export const MessagesScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   list: {
     padding: 16,
   },
   conversationCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     marginBottom: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: "#eee",
   },
   conversationContent: {
     flex: 1,
   },
   conversationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   conversationTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   badge: {
-    backgroundColor: '#FF385C',
+    backgroundColor: "#FF385C",
     borderRadius: 12,
     minWidth: 24,
     height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 8,
   },
   badgeText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   lastMessage: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 4,
   },
   timestamp: {
     fontSize: 12,
-    color: '#999',
+    color: "#999",
   },
   emptyText: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
 });

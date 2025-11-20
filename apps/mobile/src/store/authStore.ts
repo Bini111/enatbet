@@ -1,15 +1,19 @@
-import { create } from 'zustand';
-import { User } from '../types';
+import { create } from "zustand";
+import { User } from "../types";
 
 interface AuthState {
   user: User | null;
   firebaseUser: any | null;
   isLoading: boolean;
   error: string | null;
-  
+
   initializeAuth: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    displayName: string,
+  ) => Promise<void>;
   signOut: () => Promise<void>;
   clearError: () => void;
 }
@@ -30,10 +34,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       // Mock login for now
       const mockUser: User = {
-        id: '1',
+        id: "1",
         email,
-        displayName: email.split('@')[0],
-        role: 'guest',
+        displayName: email.split("@")[0],
+        role: "guest",
         createdAt: new Date(),
       };
       set({ user: mockUser, isLoading: false });
@@ -51,7 +55,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         id: Date.now().toString(),
         email,
         displayName,
-        role: 'guest',
+        role: "guest",
         createdAt: new Date(),
       };
       set({ user: newUser, isLoading: false });

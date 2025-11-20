@@ -1,11 +1,11 @@
-import { create } from 'zustand';
-import { Listing } from '@enatbet/shared';
+import { create } from "zustand";
+import { Listing } from "@enatbet/shared";
 import {
   getAllListings,
   getListingById,
   searchListings,
   getHostListings,
-} from '@enatbet/firebase';
+} from "@enatbet/firebase";
 
 interface ListingState {
   listings: Listing[];

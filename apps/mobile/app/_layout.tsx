@@ -9,23 +9,23 @@ export default function RootLayout() {
       <StatusBar style="auto" />
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="login" 
-          options={{ 
+        <Stack.Screen
+          name="login"
+          options={{
             title: "Sign In",
             presentation: "modal",
-            headerStyle: { backgroundColor: '#667eea' },
-            headerTintColor: '#fff',
-          }} 
+            headerStyle: { backgroundColor: "#667eea" },
+            headerTintColor: "#fff",
+          }}
         />
-        <Stack.Screen 
-          name="signup" 
-          options={{ 
+        <Stack.Screen
+          name="signup"
+          options={{
             title: "Create Account",
             presentation: "modal",
-            headerStyle: { backgroundColor: '#667eea' },
-            headerTintColor: '#fff',
-          }} 
+            headerStyle: { backgroundColor: "#667eea" },
+            headerTintColor: "#fff",
+          }}
         />
       </Stack>
     </GestureHandlerRootView>

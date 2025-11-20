@@ -1,5 +1,11 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 
 export default function HomeScreen() {
   return (
@@ -11,12 +17,12 @@ export default function HomeScreen() {
           <Text style={styles.logo}>ENATBET</Text>
           <Text style={styles.flag}>🇪🇷</Text>
         </View>
-        
+
         <Text style={styles.tagline}>"Book a home, not just a room"</Text>
         <Text style={styles.subtitle}>
           Connecting Ethiopian & Eritrean diaspora communities worldwide
         </Text>
-        
+
         <TouchableOpacity style={styles.exploreButton}>
           <Text style={styles.exploreButtonText}>Start Exploring</Text>
         </TouchableOpacity>
@@ -25,7 +31,7 @@ export default function HomeScreen() {
       {/* Features Section */}
       <View style={styles.featuresSection}>
         <Text style={styles.sectionTitle}>Why Choose Enatbet?</Text>
-        
+
         <View style={styles.featureCard}>
           <Text style={styles.featureIcon}>🏡</Text>
           <Text style={styles.featureTitle}>Community Homes</Text>
@@ -33,7 +39,7 @@ export default function HomeScreen() {
             Stay with Ethiopian & Eritrean families worldwide
           </Text>
         </View>
-        
+
         <View style={styles.featureCard}>
           <Text style={styles.featureIcon}>☕</Text>
           <Text style={styles.featureTitle}>Cultural Experience</Text>
@@ -41,7 +47,7 @@ export default function HomeScreen() {
             Enjoy coffee ceremonies and traditional hospitality
           </Text>
         </View>
-        
+
         <View style={styles.featureCard}>
           <Text style={styles.featureIcon}>🤝</Text>
           <Text style={styles.featureTitle}>Trusted Network</Text>
@@ -53,11 +59,13 @@ export default function HomeScreen() {
 
       {/* CTA Section */}
       <View style={styles.ctaSection}>
-        <Text style={styles.ctaTitle}>Ready to Find Your Home Away From Home?</Text>
+        <Text style={styles.ctaTitle}>
+          Ready to Find Your Home Away From Home?
+        </Text>
         <Text style={styles.ctaSubtitle}>
           Join thousands in our global Ethiopian & Eritrean community
         </Text>
-        
+
         <View style={styles.ctaButtons}>
           <TouchableOpacity style={styles.findHomeButton}>
             <Text style={styles.findHomeButtonText}>Find a Home</Text>
@@ -74,18 +82,18 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   hero: {
-    backgroundColor: '#ec4899',
+    backgroundColor: "#ec4899",
     paddingTop: 80,
     paddingBottom: 40,
     paddingHorizontal: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   flagContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
   },
   flag: {
@@ -94,35 +102,35 @@ const styles = StyleSheet.create({
   },
   logo: {
     fontSize: 48,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     letterSpacing: 2,
   },
   tagline: {
     fontSize: 24,
-    color: '#fff',
-    fontStyle: 'italic',
-    fontWeight: '600',
+    color: "#fff",
+    fontStyle: "italic",
+    fontWeight: "600",
     marginBottom: 10,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    color: '#fff',
-    textAlign: 'center',
+    color: "#fff",
+    textAlign: "center",
     marginBottom: 30,
     paddingHorizontal: 20,
   },
   exploreButton: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 8,
   },
   exploreButtonText: {
-    color: '#ec4899',
+    color: "#ec4899",
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   featuresSection: {
     paddingVertical: 40,
@@ -130,19 +138,19 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 30,
-    color: '#111',
+    color: "#111",
   },
   featureCard: {
     borderWidth: 1,
-    borderColor: '#e5e5e5',
+    borderColor: "#e5e5e5",
     borderRadius: 8,
     padding: 24,
     marginBottom: 16,
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
   featureIcon: {
     fontSize: 48,
@@ -150,58 +158,58 @@ const styles = StyleSheet.create({
   },
   featureTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
-    color: '#111',
+    color: "#111",
   },
   featureText: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
   ctaSection: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: "#f0fdf4",
     paddingVertical: 40,
     paddingHorizontal: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   ctaTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 12,
-    color: '#111',
+    color: "#111",
   },
   ctaSubtitle: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginBottom: 24,
   },
   ctaButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   findHomeButton: {
-    backgroundColor: '#ec4899',
+    backgroundColor: "#ec4899",
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 8,
     marginRight: 10,
   },
   findHomeButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   listHomeButton: {
-    backgroundColor: '#1f2937',
+    backgroundColor: "#1f2937",
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 8,
   },
   listHomeButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
-import { useAuthStore } from '../store/authStore';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import React, { useState } from "react";
+import { View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import { Text, TextInput, Button, Snackbar } from "react-native-paper";
+import { useAuthStore } from "../store/authStore";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation/types";
 
 type LoginScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Login'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, "Login">;
 };
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const { signIn, isLoading, error, clearError } = useAuthStore();
 
   const handleLogin = async () => {
     try {
       await signIn(email, password);
-      navigation.navigate('Home');
+      navigation.navigate("Home");
     } catch (err) {
       // Error handled by store
     }
@@ -26,7 +26,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
       <View style={styles.content}>
@@ -55,7 +55,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           secureTextEntry={!showPassword}
           right={
             <TextInput.Icon
-              icon={showPassword ? 'eye-off' : 'eye'}
+              icon={showPassword ? "eye-off" : "eye"}
               onPress={() => setShowPassword(!showPassword)}
             />
           }
@@ -74,18 +74,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
         <Button
           mode="text"
-          onPress={() => navigation.navigate('SignUp')}
+          onPress={() => navigation.navigate("SignUp")}
           style={styles.signUpButton}
         >
           Don't have an account? Sign Up
         </Button>
       </View>
 
-      <Snackbar
-        visible={!!error}
-        onDismiss={clearError}
-        duration={3000}
-      >
+      <Snackbar visible={!!error} onDismiss={clearError} duration={3000}>
         {error}
       </Snackbar>
     </KeyboardAvoidingView>
@@ -95,19 +91,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   content: {
     flex: 1,
     padding: 24,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   title: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   subtitle: {
-    color: '#717171',
+    color: "#717171",
     marginBottom: 32,
   },
   input: {

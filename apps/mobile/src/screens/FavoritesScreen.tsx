@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,10 +6,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-} from 'react-native';
-import { useAuthStore } from '../stores/authStore';
-import { getUserFavorites, getListingById } from '@enatbet/firebase';
-import { Listing } from '@enatbet/shared';
+} from "react-native";
+import { useAuthStore } from "../stores/authStore";
+import { getUserFavorites, getListingById } from "@enatbet/firebase";
+import { Listing } from "@enatbet/shared";
 
 export const FavoritesScreen = ({ navigation }: any) => {
   const { user } = useAuthStore();
@@ -27,12 +27,12 @@ export const FavoritesScreen = ({ navigation }: any) => {
       setIsLoading(true);
       const favoriteIds = await getUserFavorites(user.id);
 
-      const listingsPromises = favoriteIds.map(id => getListingById(id));
+      const listingsPromises = favoriteIds.map((id) => getListingById(id));
       const listings = await Promise.all(listingsPromises);
 
-      setFavorites(listings.filter(l => l !== null) as Listing[]);
+      setFavorites(listings.filter((l) => l !== null) as Listing[]);
     } catch (error) {
-      console.error('Error loading favorites:', error);
+      console.error("Error loading favorites:", error);
     } finally {
       setIsLoading(false);
     }
@@ -41,7 +41,9 @@ export const FavoritesScreen = ({ navigation }: any) => {
   const renderFavoriteItem = ({ item }: { item: Listing }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => navigation.navigate('PropertyDetails', { listingId: item.id })}
+      onPress={() =>
+        navigation.navigate("PropertyDetails", { listingId: item.id })
+      }
     >
       <View style={styles.cardContent}>
         <Text style={styles.title}>{item.title}</Text>
@@ -72,7 +74,7 @@ export const FavoritesScreen = ({ navigation }: any) => {
         </Text>
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate('Explore')}
+          onPress={() => navigation.navigate("Explore")}
         >
           <Text style={styles.buttonText}>Explore Properties</Text>
         </TouchableOpacity>
@@ -95,22 +97,22 @@ export const FavoritesScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   list: {
     padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -121,39 +123,39 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 4,
   },
   location: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 8,
   },
   price: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#FF385C',
+    fontWeight: "700",
+    color: "#FF385C",
   },
   emptyText: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginBottom: 24,
   },
   button: {
-    backgroundColor: '#FF385C',
+    backgroundColor: "#FF385C",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

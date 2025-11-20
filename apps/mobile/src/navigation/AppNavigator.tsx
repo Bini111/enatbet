@@ -1,22 +1,22 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
-import { HomeScreen } from '../screens/HomeScreen';
-import { SearchScreen } from '../screens/SearchScreen';
-import { PropertyDetailsScreen } from '../screens/PropertyDetailsScreen';
-import { BookingScreen } from '../screens/BookingScreen';
-import { ProfileScreen } from '../screens/ProfileScreen';
-import { LoginScreen } from '../screens/LoginScreen';
-import { SignUpScreen } from '../screens/SignUpScreen';
-import { FavoritesScreen } from '../screens/FavoritesScreen';
-import { MessagesScreen } from '../screens/MessagesScreen';
-import { ChatScreen } from '../screens/ChatScreen';
-import { MyBookingsScreen } from '../screens/MyBookingsScreen';
+import { HomeScreen } from "../screens/HomeScreen";
+import { SearchScreen } from "../screens/SearchScreen";
+import { PropertyDetailsScreen } from "../screens/PropertyDetailsScreen";
+import { BookingScreen } from "../screens/BookingScreen";
+import { ProfileScreen } from "../screens/ProfileScreen";
+import { LoginScreen } from "../screens/LoginScreen";
+import { SignUpScreen } from "../screens/SignUpScreen";
+import { FavoritesScreen } from "../screens/FavoritesScreen";
+import { MessagesScreen } from "../screens/MessagesScreen";
+import { ChatScreen } from "../screens/ChatScreen";
+import { MyBookingsScreen } from "../screens/MyBookingsScreen";
 
-import { RootStackParamList, TabParamList } from './types';
+import { RootStackParamList, TabParamList } from "./types";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -25,8 +25,8 @@ function TabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#FF385C',
-        tabBarInactiveTintColor: '#717171',
+        tabBarActiveTintColor: "#FF385C",
+        tabBarInactiveTintColor: "#717171",
       }}
     >
       <Tab.Screen
@@ -92,13 +92,13 @@ export default function AppNavigator() {
         <Stack.Screen
           name="PropertyDetails"
           component={PropertyDetailsScreen}
-          options={{ title: 'Property Details' }}
+          options={{ title: "Property Details" }}
         />
         <Stack.Screen name="Booking" component={BookingScreen} />
         <Stack.Screen
           name="Chat"
           component={ChatScreen}
-          options={{ title: 'Chat' }}
+          options={{ title: "Chat" }}
         />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />

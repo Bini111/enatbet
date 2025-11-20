@@ -1,19 +1,24 @@
-import React from 'react';
-import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { Card, Text, Chip } from 'react-native-paper';
-import { Property } from '../../types';
+import React from "react";
+import { View, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { Card, Text, Chip } from "react-native-paper";
+import { Property } from "../../types";
 
 interface PropertyCardProps {
   property: Property;
   onPress: () => void;
 }
 
-export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onPress }) => {
+export const PropertyCard: React.FC<PropertyCardProps> = ({
+  property,
+  onPress,
+}) => {
   return (
     <TouchableOpacity onPress={onPress}>
       <Card style={styles.card}>
-        <Card.Cover 
-          source={{ uri: property.images[0] || 'https://via.placeholder.com/400x300' }} 
+        <Card.Cover
+          source={{
+            uri: property.images[0] || "https://via.placeholder.com/400x300",
+          }}
           style={styles.image}
         />
         <Card.Content style={styles.content}>
@@ -27,15 +32,17 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onPress })
               </View>
             )}
           </View>
-          
+
           <Text variant="bodyMedium" style={styles.location}>
             {property.location.city}, {property.location.country}
           </Text>
-          
+
           <View style={styles.details}>
-            <Text variant="bodySmall">{property.bedrooms} bed · {property.bathrooms} bath</Text>
+            <Text variant="bodySmall">
+              {property.bedrooms} bed · {property.bathrooms} bath
+            </Text>
           </View>
-          
+
           <View style={styles.footer}>
             <Text variant="titleMedium" style={styles.price}>
               ${property.pricePerNight}
@@ -60,27 +67,27 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 4,
   },
   rating: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   location: {
-    color: '#717171',
+    color: "#717171",
     marginBottom: 8,
   },
   details: {
     marginBottom: 8,
   },
   footer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
   },
   price: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

@@ -1,13 +1,13 @@
-import { create } from 'zustand';
-import { User } from '@enatbet/shared';
+import { create } from "zustand";
+import { User } from "@enatbet/shared";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
-} from 'firebase/auth';
-import { auth } from '../config/firebase';
-import { getUserById } from '@enatbet/firebase';
+} from "firebase/auth";
+import { auth } from "../config/firebase";
+import { getUserById } from "@enatbet/firebase";
 
 interface AuthState {
   user: User | null;
@@ -17,7 +17,11 @@ interface AuthState {
 
   // Actions
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    displayName: string,
+  ) => Promise<void>;
   signOut: () => Promise<void>;
   loadUser: (userId: string) => Promise<void>;
   initialize: () => void;
@@ -37,7 +41,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           const user = await getUserById(firebaseUser.uid);
           set({ user, isAuthenticated: true, isLoading: false });
         } catch (error) {
-          console.error('Error loading user:', error);
+          console.error("Error loading user:", error);
           set({ user: null, isAuthenticated: false, isLoading: false });
         }
       } else {
@@ -51,7 +55,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   signIn: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
-      const credential = await signInWithEmailAndPassword(auth, email, password);
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
       const user = await getUserById(credential.user.uid);
       set({ user, isAuthenticated: true, isLoading: false });
     } catch (error: any) {
@@ -63,7 +71,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   signUp: async (email: string, password: string, displayName: string) => {
     set({ isLoading: true, error: null });
     try {
-      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      const credential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
       // User profile will be created by Firebase trigger or separately
       const user = await getUserById(credential.user.uid);
       set({ user, isAuthenticated: true, isLoading: false });

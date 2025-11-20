@@ -1,12 +1,12 @@
-import { create } from 'zustand';
-import { Booking, CreateBookingInput } from '@enatbet/shared';
+import { create } from "zustand";
+import { Booking, CreateBookingInput } from "@enatbet/shared";
 import {
   getUserBookings,
   getHostBookings,
   getBookingById,
   createBooking,
   cancelBooking,
-} from '@enatbet/firebase';
+} from "@enatbet/firebase";
 
 interface BookingState {
   bookings: Booking[];
@@ -18,8 +18,16 @@ interface BookingState {
   fetchUserBookings: (userId: string) => Promise<void>;
   fetchHostBookings: (hostId: string) => Promise<void>;
   fetchBookingById: (id: string) => Promise<void>;
-  createBooking: (guestId: string, booking: CreateBookingInput, pricing: any) => Promise<string>;
-  cancelBooking: (bookingId: string, reason: string, cancelledBy: 'guest' | 'host') => Promise<void>;
+  createBooking: (
+    guestId: string,
+    booking: CreateBookingInput,
+    pricing: any,
+  ) => Promise<string>;
+  cancelBooking: (
+    bookingId: string,
+    reason: string,
+    cancelledBy: "guest" | "host",
+  ) => Promise<void>;
   clearError: () => void;
 }
 
@@ -59,7 +67,11 @@ export const useBookingStore = create<BookingState>((set) => ({
     }
   },
 
-  createBooking: async (guestId: string, booking: CreateBookingInput, pricing: any) => {
+  createBooking: async (
+    guestId: string,
+    booking: CreateBookingInput,
+    pricing: any,
+  ) => {
     set({ isLoading: true, error: null });
     try {
       const bookingId = await createBooking(guestId, booking, pricing);
@@ -71,7 +83,11 @@ export const useBookingStore = create<BookingState>((set) => ({
     }
   },
 
-  cancelBooking: async (bookingId: string, reason: string, cancelledBy: 'guest' | 'host') => {
+  cancelBooking: async (
+    bookingId: string,
+    reason: string,
+    cancelledBy: "guest" | "host",
+  ) => {
     set({ isLoading: true, error: null });
     try {
       await cancelBooking(bookingId, reason, cancelledBy);

@@ -1,12 +1,12 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Button, Avatar, List, Divider } from 'react-native-paper';
-import { useAuthStore } from '../store/authStore';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import React from "react";
+import { View, StyleSheet, ScrollView } from "react-native";
+import { Text, Button, Avatar, List, Divider } from "react-native-paper";
+import { useAuthStore } from "../store/authStore";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation/types";
 
 type ProfileScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Profile'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, "Profile">;
 };
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
@@ -14,7 +14,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigation.navigate('Home');
+    navigation.navigate("Home");
   };
 
   if (!user) {
@@ -24,7 +24,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <Text variant="headlineMedium" style={styles.title}>
             Sign in to continue
           </Text>
-          <Button mode="contained" onPress={() => navigation.navigate('Login')}>
+          <Button mode="contained" onPress={() => navigation.navigate("Login")}>
             Sign In
           </Button>
         </View>
@@ -35,7 +35,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Avatar.Text size={80} label={user.displayName.substring(0, 2).toUpperCase()} />
+        <Avatar.Text
+          size={80}
+          label={user.displayName.substring(0, 2).toUpperCase()}
+        />
         <Text variant="headlineMedium" style={styles.name}>
           {user.displayName}
         </Text>
@@ -49,20 +52,20 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       <List.Section>
         <List.Item
           title="My Bookings"
-          left={props => <List.Icon {...props} icon="calendar" />}
-          onPress={() => navigation.navigate('MyBookings')}
+          left={(props) => <List.Icon {...props} icon="calendar" />}
+          onPress={() => navigation.navigate("MyBookings")}
         />
         <List.Item
           title="Favorites"
-          left={props => <List.Icon {...props} icon="heart" />}
+          left={(props) => <List.Icon {...props} icon="heart" />}
         />
         <List.Item
           title="Settings"
-          left={props => <List.Icon {...props} icon="cog" />}
+          left={(props) => <List.Icon {...props} icon="cog" />}
         />
         <List.Item
           title="Help & Support"
-          left={props => <List.Icon {...props} icon="help-circle" />}
+          left={(props) => <List.Icon {...props} icon="help-circle" />}
         />
       </List.Section>
 
@@ -78,24 +81,24 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 32,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 32,
   },
   name: {
     marginTop: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   email: {
-    color: '#717171',
+    color: "#717171",
     marginTop: 4,
   },
   title: {
