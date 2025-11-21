@@ -21,8 +21,37 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, "node_modules"),
 ];
 
-// Support workspace packages with proper extensions
-config.resolver.sourceExts = [...config.resolver.sourceExts, "mjs", "cjs"];
+// CRITICAL: Support .ts/.tsx from workspace packages
+config.resolver.sourceExts = [
+  ...config.resolver.sourceExts,
+  "ts",
+  "tsx",
+  "mjs",
+  "cjs",
+];
+
+// Handle workspace packages that export TS directly
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  // Let Metro resolve workspace packages to TS files
+  if (moduleName.startsWith("@enatbet/")) {
+    const packagePath = path.resolve(
+      monorepoRoot,
+      "packages",
+      moduleName.split("/")[1]
+    );
+    
+    // Try src/index.ts first (your firebase package structure)
+    const indexPath = path.join(packagePath, "src", "index.ts");
+    
+    return {
+      filePath: indexPath,
+      type: "sourceFile",
+    };
+  }
+  
+  // Default resolver
+  return context.resolveRequest(context, moduleName, platform);
+};
 
 // SVG transformer setup
 const { transformer, resolver } = config;
@@ -33,9 +62,9 @@ config.transformer = {
 };
 
 config.resolver = {
-  ...resolver,
+  ...config.resolver,
   assetExts: resolver.assetExts.filter((ext) => ext !== "svg"),
-  sourceExts: [...resolver.sourceExts, "svg"],
+  sourceExts: [...config.resolver.sourceExts, "svg"],
 };
 
 module.exports = config;

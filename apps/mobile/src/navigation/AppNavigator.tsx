@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
-import { HomeScreen } from "../screens/HomeScreen";
+import HomeScreen from "../screens/HomeScreen";
 import { SearchScreen } from "../screens/SearchScreen";
 import { PropertyDetailsScreen } from "../screens/PropertyDetailsScreen";
 import { BookingScreen } from "../screens/BookingScreen";
@@ -85,7 +85,7 @@ function TabNavigator() {
 export default function AppNavigator() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator initialRouteName="MainTabs">
         <Stack.Screen
           name="MainTabs"
           component={TabNavigator}

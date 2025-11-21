@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  updateProfile,
 } from "firebase/auth";
 import { auth } from "../config/firebase";
 import { getUserById } from "@enatbet/firebase";
@@ -15,13 +16,8 @@ interface AuthState {
   isAuthenticated: boolean;
   error: string | null;
 
-  // Actions
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (
-    email: string,
-    password: string,
-    displayName: string,
-  ) => Promise<void>;
+  signUp: (email: string, password: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
   loadUser: (userId: string) => Promise<void>;
   initialize: () => void;
@@ -35,6 +31,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   error: null,
 
   initialize: () => {
+    if (!auth) {
+      console.error("Firebase auth not initialized");
+      set({ isLoading: false });
+      return () => {};
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
@@ -55,11 +57,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   signIn: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
-      const credential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
+      if (!auth) throw new Error("Firebase auth not initialized");
+      
+      const credential = await signInWithEmailAndPassword(auth, email, password);
       const user = await getUserById(credential.user.uid);
       set({ user, isAuthenticated: true, isLoading: false });
     } catch (error: any) {
@@ -71,12 +71,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   signUp: async (email: string, password: string, displayName: string) => {
     set({ isLoading: true, error: null });
     try {
-      const credential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
-      // User profile will be created by Firebase trigger or separately
+      if (!auth) throw new Error("Firebase auth not initialized");
+      
+      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(credential.user, { displayName });
       const user = await getUserById(credential.user.uid);
       set({ user, isAuthenticated: true, isLoading: false });
     } catch (error: any) {
@@ -88,6 +86,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   signOut: async () => {
     set({ isLoading: true, error: null });
     try {
+      if (!auth) throw new Error("Firebase auth not initialized");
+      
       await firebaseSignOut(auth);
       set({ user: null, isAuthenticated: false, isLoading: false });
     } catch (error: any) {

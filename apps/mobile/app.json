@@ -23,7 +23,6 @@
         "backgroundColor": "#E91E63"
       },
       "package": "app.enatbet.mobile"
-    },
-    "plugins": ["expo-router"]
+    }
   }
 }
