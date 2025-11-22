@@ -1245,7 +1245,7 @@ PODS:
     - React-logger (= 0.74.5)
     - React-perflogger (= 0.74.5)
     - React-utils (= 0.74.5)
-  - RNCAsyncStorage (2.2.0):
+  - RNCAsyncStorage (1.23.1):
     - React-Core
   - RNReanimated (3.10.1):
     - DoubleConversion
@@ -1681,7 +1681,7 @@ SPEC CHECKSUMS:
   React-runtimescheduler: 914607b0f1a58e1a8366c13f8d2efb49c17d57d1
   React-utils: 3c4b8677afc614f15357ad66fcc3e61bc21a42db
   ReactCommon: cfb89afbdafafbf049c719db9cb61ac4d38af434
-  RNCAsyncStorage: b44e8a4e798c3e1f56bffccd0f591f674fb9198f
+  RNCAsyncStorage: aa75595c1aefa18f868452091fa0c411a516ce11
   RNReanimated: 29533404792c6a5559e7787f847e28afd2987961
   RNScreens: 5b35d863db10f9be81da4e8f4e08096ee7644f8c
   RNSVG: 0e7deccab0678200815104223aadd5ca734dd41d

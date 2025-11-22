@@ -10,13 +10,13 @@
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
+		3684E3B320FA76D39FBFA6E0 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 89A6F845DC3F7D72196C7CA5 /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		811FD534EBC786B1A8EBE539 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5CE85C356C7AC55754F5D9B5 /* PrivacyInfo.xcprivacy */; };
-		8B64AE1773027DF1FD04577C /* Pods_Enatbet.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 781802C261BC880B566838E2 /* Pods_Enatbet.framework */; };
-		AD71E27BB4614307BC01E29D /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D1AA9B28E86457D907F42FF /* noop-file.swift */; };
+		7BA4245F122C4B70B20DB8CC /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 680DB98A35C74EFF821FBD20 /* GoogleService-Info.plist */; };
+		87AFB9F2888243368C9E00AF /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E0F562EC4DB4C2FB1466CA1 /* noop-file.swift */; };
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		FA967602D1744403BD5B4C4E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1B450740E7F647F39C2B0ABE /* GoogleService-Info.plist */; };
+		BCFFDD19E1942CECCEF2AEE4 /* Pods_Enatbet.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50584B422362FEE5DF62C8BE /* Pods_Enatbet.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,15 +26,15 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Enatbet/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Enatbet/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = Enatbet/main.m; sourceTree = "<group>"; };
-		1B450740E7F647F39C2B0ABE /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Enatbet/GoogleService-Info.plist"; sourceTree = "<group>"; };
-		1D1AA9B28E86457D907F42FF /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "Enatbet/noop-file.swift"; sourceTree = "<group>"; };
-		3FAAC4CADBC74C43A94D0676 /* Enatbet-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "Enatbet-Bridging-Header.h"; path = "Enatbet/Enatbet-Bridging-Header.h"; sourceTree = "<group>"; };
-		5CE85C356C7AC55754F5D9B5 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Enatbet/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		50584B422362FEE5DF62C8BE /* Pods_Enatbet.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Enatbet.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		680DB98A35C74EFF821FBD20 /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Enatbet/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		6C2E3173556A471DD304B334 /* Pods-Enatbet.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Enatbet.debug.xcconfig"; path = "Target Support Files/Pods-Enatbet/Pods-Enatbet.debug.xcconfig"; sourceTree = "<group>"; };
-		781802C261BC880B566838E2 /* Pods_Enatbet.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Enatbet.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A4D352CD337FB3A3BF06240 /* Pods-Enatbet.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Enatbet.release.xcconfig"; path = "Target Support Files/Pods-Enatbet/Pods-Enatbet.release.xcconfig"; sourceTree = "<group>"; };
+		7E0F562EC4DB4C2FB1466CA1 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "Enatbet/noop-file.swift"; sourceTree = "<group>"; };
+		89A6F845DC3F7D72196C7CA5 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Enatbet/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Enatbet/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
+		DEB1506E9F484BEC97E658DF /* Enatbet-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "Enatbet-Bridging-Header.h"; path = "Enatbet/Enatbet-Bridging-Header.h"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Enatbet/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -44,7 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8B64AE1773027DF1FD04577C /* Pods_Enatbet.framework in Frameworks */,
+				BCFFDD19E1942CECCEF2AEE4 /* Pods_Enatbet.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -61,10 +61,10 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				1B450740E7F647F39C2B0ABE /* GoogleService-Info.plist */,
-				1D1AA9B28E86457D907F42FF /* noop-file.swift */,
-				3FAAC4CADBC74C43A94D0676 /* Enatbet-Bridging-Header.h */,
-				5CE85C356C7AC55754F5D9B5 /* PrivacyInfo.xcprivacy */,
+				680DB98A35C74EFF821FBD20 /* GoogleService-Info.plist */,
+				7E0F562EC4DB4C2FB1466CA1 /* noop-file.swift */,
+				DEB1506E9F484BEC97E658DF /* Enatbet-Bridging-Header.h */,
+				89A6F845DC3F7D72196C7CA5 /* PrivacyInfo.xcprivacy */,
 			);
 			name = Enatbet;
 			sourceTree = "<group>";
@@ -73,7 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				781802C261BC880B566838E2 /* Pods_Enatbet.framework */,
+				50584B422362FEE5DF62C8BE /* Pods_Enatbet.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -150,13 +150,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Enatbet" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				D48664248B7FFC5F6CA42C81 /* [Expo] Configure project */,
+				BA802028767EBFDBC509B4F1 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				A11C17D6BE7A302A8A6A613D /* [CP] Embed Pods Frameworks */,
+				A5087EB62274BBA1822381D0 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -177,6 +177,8 @@
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
 						LastSwiftMigration = 1250;
+						DevelopmentTeam = "H3WXNRW58M";
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -206,8 +208,8 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				FA967602D1744403BD5B4C4E /* GoogleService-Info.plist in Resources */,
-				811FD534EBC786B1A8EBE539 /* PrivacyInfo.xcprivacy in Resources */,
+				7BA4245F122C4B70B20DB8CC /* GoogleService-Info.plist in Resources */,
+				3684E3B320FA76D39FBFA6E0 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -339,7 +341,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Enatbet/Pods-Enatbet-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		A11C17D6BE7A302A8A6A613D /* [CP] Embed Pods Frameworks */ = {
+		A5087EB62274BBA1822381D0 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -357,7 +359,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Enatbet/Pods-Enatbet-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D48664248B7FFC5F6CA42C81 /* [Expo] Configure project */ = {
+		BA802028767EBFDBC509B4F1 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -386,7 +388,7 @@
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 				B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */,
-				AD71E27BB4614307BC01E29D /* noop-file.swift in Sources */,
+				87AFB9F2888243368C9E00AF /* noop-file.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -423,6 +425,9 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
+				DEVELOPMENT_TEAM = "H3WXNRW58M";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 			};
 			name = Debug;
 		};
@@ -450,6 +455,9 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
+				DEVELOPMENT_TEAM = "H3WXNRW58M";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 			};
 			name = Release;
 		};

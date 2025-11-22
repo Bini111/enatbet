@@ -5,24 +5,29 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#E91E63"
+      "backgroundColor": "#667eea"
     },
-    "platforms": ["ios", "android"],
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.enatbet.mobile"
+      "bundleIdentifier": "com.enatbet.app"
     },
     "android": {
+      "package": "com.enatbet.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#E91E63"
-      },
-      "package": "app.enatbet.mobile"
-    }
+        "backgroundColor": "#667eea"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }

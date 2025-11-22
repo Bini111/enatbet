@@ -1,4 +1,4 @@
-package app.enatbet.mobile
+package com.enatbet.app
 
 import android.os.Build
 import android.os.Bundle

@@ -9,19 +9,22 @@ const config = getDefaultConfig(projectRoot);
 // Watch monorepo root and all packages
 config.watchFolders = [monorepoRoot];
 
+// CRITICAL: Disable hierarchical lookup for pnpm compatibility
+config.resolver.disableHierarchicalLookup = true;
+
 // Force single React instance from monorepo root
 config.resolver.extraNodeModules = {
   react: path.resolve(monorepoRoot, "node_modules/react"),
   "react-native": path.resolve(monorepoRoot, "node_modules/react-native"),
 };
 
-// Resolve modules from both project and monorepo
+// Resolve modules from both project and monorepo (order matters for iOS)
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(monorepoRoot, "node_modules"),
 ];
 
-// CRITICAL: Support .ts/.tsx from workspace packages
+// Support .ts/.tsx from workspace packages
 config.resolver.sourceExts = [
   ...config.resolver.sourceExts,
   "ts",
@@ -59,6 +62,12 @@ const { transformer, resolver } = config;
 config.transformer = {
   ...transformer,
   babelTransformerPath: require.resolve("react-native-svg-transformer"),
+  getTransformOptions: async () => ({
+    transform: {
+      experimentalImportSupport: false,
+      inlineRequires: true,
+    },
+  }),
 };
 
 config.resolver = {
