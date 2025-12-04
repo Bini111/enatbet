@@ -15,12 +15,16 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rm -rf node_modules .turbo",
-    "clean:all": "find . -name 'node_modules' -type d -prune -exec rm -rf {} + && find . -name '.turbo' -type d -prune -exec rm -rf {} + && rm -f pnpm-lock.yaml"
+    "clean:all": "find . -name 'node_modules' -type d -prune -exec rm -rf {} + && find . -name '.turbo' -type d -prune -exec rm -rf {} + && rm -f pnpm-lock.yaml",
+    "firebase:dev": "firebase emulators:start --only auth,firestore,storage --config firebase.dev.json",
+    "firebase:deploy": "firebase deploy --only firestore,storage,functions",
+    "firebase:deploy:rules": "firebase deploy --only firestore:rules,storage:rules"
   },
   "devDependencies": {
     "turbo": "^2.3.0",
     "typescript": "^5.3.3",
-    "prettier": "^3.1.0"
+    "prettier": "^3.1.0",
+    "firebase-tools": "^13.0.0"
   },
   "pnpm": {
     "overrides": {

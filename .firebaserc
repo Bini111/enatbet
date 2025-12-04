@@ -1,0 +1,10 @@
+cd ~/Desktop/enatbet
+
+cat > .firebaserc << 'ENDOFFILE'
+{
+  "projects": {
+    "default": "enatbet-demo",
+    "production": "enatbet-demo"
+  }
+}
+ENDOFFILE

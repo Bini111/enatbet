@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import './globals.css';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { useAuthStore } from '@/store/authStore';
 
 export default function RootLayout({
@@ -18,9 +19,10 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className="antialiased flex flex-col min-h-screen">
         <Navbar />
-        {children}
+        <main className="flex-grow">{children}</main>
+        <Footer />
       </body>
     </html>
   );

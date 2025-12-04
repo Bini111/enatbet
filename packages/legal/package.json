@@ -1,0 +1,24 @@
+{
+  "name": "@enatbet/legal",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./terms": "./src/terms-of-service.ts",
+    "./privacy": "./src/privacy-policy.ts",
+    "./host-agreement": "./src/host-agreement.ts",
+    "./cancellation": "./src/cancellation-policy.ts",
+    "./content": "./src/content-policy.ts"
+  },
+  "scripts": {
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,7 +1,11 @@
-'use client';
-
 import { termsOfService, formatContent } from '@enatbet/legal';
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service - Enatbet',
+  description: 'Terms of Service for using the Enatbet property rental platform',
+};
 
 export default function TermsOfServicePage() {
   return (

@@ -1,21 +1,25 @@
-'use client';
-
-import { termsOfService, formatContent } from '@enatbet/legal';
+import { privacyPolicy, formatContent } from '@enatbet/legal';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
-export default function TermsOfServicePage() {
+export const metadata: Metadata = {
+  title: 'Privacy Policy - Enatbet',
+  description: 'Privacy Policy for the Enatbet property rental platform',
+};
+
+export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8 md:p-12">
         <div className="border-b pb-6 mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            {termsOfService.title}
+            {privacyPolicy.title}
           </h1>
           <p className="text-sm text-gray-600">
-            Last Updated: {termsOfService.lastUpdated}
+            Last Updated: {privacyPolicy.lastUpdated}
           </p>
           <p className="text-sm text-gray-600">
-            Effective Date: {termsOfService.effectiveDate}
+            Effective Date: {privacyPolicy.effectiveDate}
           </p>
         </div>
 
@@ -24,7 +28,7 @@ export default function TermsOfServicePage() {
             Table of Contents
           </h2>
           <nav className="space-y-2">
-            {termsOfService.sections.map((section) => (
+            {privacyPolicy.sections.map((section) => (
               <a
                 key={section.id}
                 href={`#${section.id}`}
@@ -37,7 +41,7 @@ export default function TermsOfServicePage() {
         </div>
 
         <div className="prose prose-lg max-w-none">
-          {termsOfService.sections.map((section) => (
+          {privacyPolicy.sections.map((section) => (
             <section key={section.id} id={section.id} className="mb-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
                 {section.title}
@@ -53,16 +57,16 @@ export default function TermsOfServicePage() {
 
         <div className="mt-12 p-6 bg-blue-50 rounded-lg border border-blue-200">
           <p className="text-gray-800 font-medium">
-            {termsOfService.acknowledgment}
+            {privacyPolicy.effectiveStatement}
           </p>
         </div>
 
         <div className="mt-12 pt-8 border-t flex justify-between items-center">
           <Link
-            href="/privacy-policy"
+            href="/terms-of-service"
             className="text-blue-600 hover:text-blue-800 font-medium"
           >
-            ← Privacy Policy
+            ← Terms of Service
           </Link>
           <Link
             href="/"

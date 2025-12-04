@@ -2,7 +2,7 @@
  * Firebase Client SDK for browser/client-side operations
  */
 
-import { initializeApp, getApps } from 'firebase/app';
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -32,11 +32,18 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase (client-side)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const auth: Auth = getAuth(app);
-const db: Firestore = getFirestore(app);
-const storage: FirebaseStorage = getStorage(app);
+// Initialize Firebase only on client side
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+let storage: FirebaseStorage;
+
+if (typeof window !== 'undefined') {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+}
 
 // Export Firebase instances
 export { app, auth, db, storage };
@@ -48,6 +55,8 @@ export { onAuthStateChanged } from 'firebase/auth';
  * Sign in with email and password
  */
 export async function signIn(email: string, password: string) {
+  if (typeof window === 'undefined') throw new Error('Auth is only available on client side');
+  
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential;
@@ -65,6 +74,8 @@ export async function createUser(
   password: string,
   displayName: string
 ) {
+  if (typeof window === 'undefined') throw new Error('Auth is only available on client side');
+  
   try {
     // Create auth account
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -98,6 +109,8 @@ export async function createUser(
  * Sign out the current user
  */
 export async function signOut() {
+  if (typeof window === 'undefined') throw new Error('Auth is only available on client side');
+  
   try {
     await firebaseSignOut(auth);
   } catch (error: any) {
@@ -110,6 +123,8 @@ export async function signOut() {
  * Get current user data from Firestore
  */
 export async function getCurrentUser(uid: string) {
+  if (typeof window === 'undefined') return null;
+  
   try {
     const userDoc = await getDoc(doc(db, 'users', uid));
     
@@ -132,6 +147,7 @@ export async function getCurrentUser(uid: string) {
  * Check if user is authenticated
  */
 export function getCurrentAuthUser(): User | null {
+  if (typeof window === 'undefined') return null;
   return auth.currentUser;
 }
 
@@ -139,6 +155,8 @@ export function getCurrentAuthUser(): User | null {
  * Wait for auth to initialize
  */
 export function waitForAuth(): Promise<User | null> {
+  if (typeof window === 'undefined') return Promise.resolve(null);
+  
   return new Promise((resolve) => {
     const unsubscribe = firebaseOnAuthStateChanged(auth, (user) => {
       unsubscribe();
@@ -148,3 +166,31 @@ export function waitForAuth(): Promise<User | null> {
 }
 
 export default app;
+/**
+ * Send password reset email
+ */
+export async function sendPasswordResetEmail(email: string) {
+  if (typeof window === 'undefined') throw new Error('Auth is only available on client side');
+  
+  const { sendPasswordResetEmail: firebaseSendPasswordReset } = await import('firebase/auth');
+  
+  try {
+    await firebaseSendPasswordReset(auth, email);
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('[FIREBASE] Password reset error:', error);
+    
+    const firebaseError = error as { code?: string; message?: string };
+    
+    switch (firebaseError.code) {
+      case 'auth/user-not-found':
+        throw new Error('No account found with this email address');
+      case 'auth/invalid-email':
+        throw new Error('Please enter a valid email address');
+      case 'auth/too-many-requests':
+        throw new Error('Too many attempts. Please try again later');
+      default:
+        throw new Error(firebaseError.message || 'Failed to send password reset email');
+    }
+  }
+}

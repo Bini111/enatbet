@@ -35,5 +35,6 @@
     ".expo",
     "coverage",
     "**/*.backup.json"
-  ]
+  ],
+  "extends": "expo/tsconfig.base"
 }

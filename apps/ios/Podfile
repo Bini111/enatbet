@@ -5,10 +5,7 @@ require 'json'
 podfile_properties = JSON.parse(File.read(File.join(__dir__, 'Podfile.properties.json'))) rescue {}
 
 def ccache_enabled?(podfile_properties)
-  # Environment variable takes precedence
   return ENV['USE_CCACHE'] == '1' if ENV['USE_CCACHE']
-  
-  # Fall back to Podfile properties
   podfile_properties['apple.ccacheEnabled'] == 'true'
 end
 
@@ -44,12 +41,61 @@ target 'enatbet' do
   use_react_native!(
     :path => config[:reactNativePath],
     :hermes_enabled => podfile_properties['expo.jsEngine'] == nil || podfile_properties['expo.jsEngine'] == 'hermes',
-    # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/..",
     :privacy_file_aggregation_enabled => podfile_properties['apple.privacyManifestAggregationEnabled'] != 'false',
   )
 
   post_install do |installer|
+    # Fix for BoringSSL-GRPC, gRPC-Core, and gRPC-C++ (Xcode 16 compatibility)
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        # Consistent deployment target
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.4'
+        
+        # Fix for problematic gRPC/Firebase dependencies
+        if ['BoringSSL-GRPC', 'gRPC-Core', 'gRPC-C++'].include?(target.name)
+          # CRITICAL: Disable treating warnings as errors
+          config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
+          
+          # Suppress the C++20 template warning
+          config.build_settings['WARNING_CFLAGS'] ||= ['$(inherited)']
+          config.build_settings['WARNING_CFLAGS'] << '-Wno-missing-template-arg-list-after-template-kw'
+          
+          # Disable all warnings flag
+          config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'NO'
+        end
+      end
+      
+      # Remove -GCC_WARN_INHIBIT_ALL_WARNINGS from per-file flags
+      if target.name == 'BoringSSL-GRPC'
+        target.source_build_phase.files.each do |file|
+          if file.settings && file.settings['COMPILER_FLAGS']
+            flags = file.settings['COMPILER_FLAGS'].split
+            flags.reject! { |flag| flag == '-GCC_WARN_INHIBIT_ALL_WARNINGS' }
+            file.settings['COMPILER_FLAGS'] = flags.join(' ')
+          end
+        end
+      end
+      
+      # Patch gRPC-Core template syntax issue
+      if target.name == 'gRPC-Core'
+        grpc_file_path = 'Pods/gRPC-Core/src/core/lib/promise/detail/basic_seq.h'
+        
+        if File.exist?(grpc_file_path)
+          file_content = File.read(grpc_file_path)
+          problematic = 'Traits::template CallSeqFactory(f_, *cur_, std::move(arg))'
+          fixed = 'Traits::template CallSeqFactory<>(f_, *cur_, std::move(arg))'
+          
+          if file_content.include?(problematic)
+            puts "🔧 Patching gRPC-Core basic_seq.h for Xcode 16 compatibility"
+            file_content.gsub!(problematic, fixed)
+            File.open(grpc_file_path, 'w') { |f| f.write(file_content) }
+          end
+        end
+      end
+    end
+    
+    # React Native post install
     react_native_post_install(
       installer,
       config[:reactNativePath],
