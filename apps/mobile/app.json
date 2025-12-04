@@ -3,13 +3,14 @@
     "name": "Enatbet",
     "slug": "enatbet",
     "version": "1.0.0",
+    "scheme": "enatbet",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#667eea"
+      "backgroundColor": "#6366F1"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -20,14 +21,12 @@
       "package": "com.enatbet.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#667eea"
+        "backgroundColor": "#6366F1"
       }
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-router"
-    ]
+    "plugins": []
   }
 }

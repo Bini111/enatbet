@@ -14,6 +14,10 @@ export type RootStackParamList = {
   About: undefined;
   PrivacyPolicy: undefined;
   TermsOfService: undefined;
+  ForgotPassword: undefined;
+  BecomeAHost: undefined;
+  Contact: undefined;
+  Resources: undefined;
 };
 
 export type TabParamList = {

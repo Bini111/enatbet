@@ -18,6 +18,10 @@ import { MyBookingsScreen } from "../screens/MyBookingsScreen";
 import AboutScreen from "../screens/AboutScreen";
 import PrivacyPolicyScreen from "../screens/PrivacyPolicyScreen";
 import TermsOfServiceScreen from "../screens/TermsOfServiceScreen";
+import { ForgotPasswordScreen } from "../screens/ForgotPasswordScreen";
+import { BecomeAHostScreen } from "../screens/BecomeAHostScreen";
+import { ContactScreen } from "../screens/ContactScreen";
+import { ResourcesScreen } from "../screens/ResourcesScreen";
 
 import { RootStackParamList, TabParamList } from "./types";
 
@@ -28,7 +32,7 @@ function TabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: "#FF385C",
+        tabBarActiveTintColor: "#6366F1",
         tabBarInactiveTintColor: "#717171",
       }}
     >
@@ -36,8 +40,9 @@ function TabNavigator() {
         name="Explore"
         component={HomeScreen}
         options={{
+          tabBarLabel: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Icon name="magnify" size={size} color={color} />
+            <Icon name="home" size={size} color={color} />
           ),
           headerShown: false,
         }}
@@ -46,8 +51,9 @@ function TabNavigator() {
         name="Favorites"
         component={FavoritesScreen}
         options={{
+          tabBarLabel: "Properties",
           tabBarIcon: ({ color, size }) => (
-            <Icon name="heart-outline" size={size} color={color} />
+            <Icon name="magnify" size={size} color={color} />
           ),
         }}
       />
@@ -57,15 +63,6 @@ function TabNavigator() {
         options={{
           tabBarIcon: ({ color, size }) => (
             <Icon name="calendar" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Messages"
-        component={MessagesScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="message-outline" size={size} color={color} />
           ),
         }}
       />
@@ -103,11 +100,51 @@ export default function AppNavigator() {
           component={ChatScreen}
           options={{ title: "Chat" }}
         />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="SignUp" component={SignUpScreen} />
-        <Stack.Screen name="About" component={AboutScreen} />
-        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
-        <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
+        <Stack.Screen 
+          name="Login" 
+          component={LoginScreen}
+          options={{ title: "Sign In" }}
+        />
+        <Stack.Screen 
+          name="SignUp" 
+          component={SignUpScreen}
+          options={{ title: "Create Account" }}
+        />
+        <Stack.Screen 
+          name="ForgotPassword" 
+          component={ForgotPasswordScreen}
+          options={{ title: "Reset Password" }}
+        />
+        <Stack.Screen 
+          name="BecomeAHost" 
+          component={BecomeAHostScreen}
+          options={{ title: "Become a Host" }}
+        />
+        <Stack.Screen 
+          name="Contact" 
+          component={ContactScreen}
+          options={{ title: "Contact Us" }}
+        />
+        <Stack.Screen 
+          name="Resources" 
+          component={ResourcesScreen}
+          options={{ title: "Resources & Help" }}
+        />
+        <Stack.Screen 
+          name="About" 
+          component={AboutScreen}
+          options={{ title: "About Us" }}
+        />
+        <Stack.Screen 
+          name="PrivacyPolicy" 
+          component={PrivacyPolicyScreen}
+          options={{ title: "Privacy Policy" }}
+        />
+        <Stack.Screen 
+          name="TermsOfService" 
+          component={TermsOfServiceScreen}
+          options={{ title: "Terms of Service" }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
