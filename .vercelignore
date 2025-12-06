@@ -1,0 +1,8 @@
+node_modules
+.turbo
+apps/mobile
+apps/web/.next
+packages/*/node_modules
+packages/*/dist
+*.log
+.git
