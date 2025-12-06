@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createBooking, getUserBookings, getHostBookings } from '@enatbet/firebase';
-import { calculateBookingPrice } from '@enatbet/shared';
+import { calculatePriceBreakdown } from '@enatbet/shared';
 import { adminAuth } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';

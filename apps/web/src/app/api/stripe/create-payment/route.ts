@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Missing or invalid Authorization header' },
         { status: 401 }
+      );
     }
 
     const idToken = authHeader.slice(7);
@@ -86,6 +87,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Invalid or expired authentication token' },
         { status: 401 }
+      );
     }
 
     const userId = decodedToken.uid;
@@ -96,6 +98,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'User email required for payment processing' },
         { status: 400 }
+      );
     }
 
     const body = await request.json();
@@ -108,6 +111,7 @@ export async function POST(request: NextRequest) {
           details: parseResult.error.format()
         },
         { status: 400 }
+      );
     }
 
     const {
@@ -122,12 +126,12 @@ export async function POST(request: NextRequest) {
     
     const pricePerNightMoney: Money = {
       amount: pricePerNight.amount,
-      currency: pricePerNight.currency,
+      currency: pricePerNight.currency as Money['currency'],
     };
     
     const cleaningFeeMoney: Money | undefined = cleaningFee ? {
       amount: cleaningFee.amount,
-      currency: cleaningFee.currency,
+      currency: cleaningFee.currency as Money['currency'],
     } : undefined;
     
     const pricing = calculatePriceBreakdown(
@@ -136,16 +140,15 @@ export async function POST(request: NextRequest) {
       config.platformFeeRate,
       config.taxRate,
       cleaningFeeMoney
+    );
 
-    const pricePerNightMoney: Money = {
-  amount: pricePerNight.amount,
-  currency: pricePerNight.currency as Money['currency'], // ✅ Type cast
-};
+    const validation = validateStripeCharge(pricing.total.amount, pricing.total.currency);
 
     if (!validation.valid) {
       return NextResponse.json(
         { error: validation.error },
         { status: 400 }
+      );
     }
 
     const userRef = db.collection('users').doc(userId);
@@ -164,6 +167,7 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date(),
         },
         { merge: true }
+      );
     }
 
     const hostStripeAccountId = await getHostStripeAccount(listingId);
@@ -216,10 +220,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: error.message },
         { status: statusCode }
+      );
     }
 
     return NextResponse.json(
       { error: 'Failed to create payment intent' },
       { status: 500 }
+    );
   }
 }

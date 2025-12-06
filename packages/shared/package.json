@@ -2,10 +2,14 @@
   "name": "@enatbet/shared",
   "version": "1.0.0",
   "private": true,
-  "main": "./src/index.node.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    "react-native": "./src/index.ts",
-    "default": "./src/index.node.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "react-native": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

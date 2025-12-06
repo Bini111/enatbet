@@ -9,8 +9,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { format, parseISO } from 'date-fns';
 import { toast } from 'react-hot-toast';
-import type { Booking } from '@enatbet/types';
-import { v4 as uuidv4 } from 'uuid';
+import type { Booking } from '@enatbet/shared';
 
 const BOOKINGS_PER_PAGE = 10;
 
@@ -60,7 +59,7 @@ export default function BookingsPage() {
           amount: Math.max(0, Number(data.amount) || 0),
           status: data.status || 'confirmed',
           paymentIntentId: data.paymentIntentId,
-          createdAt: createdAtDate,
+          createdAt: createdAtDate as any,
           propertyImage: data.propertyImage,
           hostName: data.hostName,
           userId: data.userId,
@@ -111,7 +110,7 @@ export default function BookingsPage() {
   const handleCancelBooking = async (bookingId: string) => {
     if (!confirm('Are you sure you want to cancel this booking?')) return;
     
-    const idempotencyKey = uuidv4();
+    const idempotencyKey = crypto.randomUUID();
     
     try {
       const response = await fetch('/api/bookings/cancel', {

@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20',
+  apiVersion: '2023-10-16',
 });
 
 export async function POST(req: NextRequest) {
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
             updatedAt: Timestamp.now(),
             expiresAt: null,
             chargeId: pi.latest_charge,
-            receiptUrl: (pi.charges?.data?.[0] as any)?.receipt_url,
+            receiptUrl: (pi as any).charges?.data?.[0]?.receipt_url,
           });
 
           tx.set(adminDb.collection('calendar_blocks').doc(), {

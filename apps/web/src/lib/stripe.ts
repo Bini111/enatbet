@@ -2,19 +2,31 @@ import 'server-only';
 import Stripe from 'stripe';
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-const API_VERSION = (process.env.STRIPE_API_VERSION || '2025-10-29.clover') as Stripe.StripeConfig['apiVersion'];
+const API_VERSION = '2023-10-16' as Stripe.StripeConfig['apiVersion'];
 
-if (!STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY is not set');
+// Lazy initialization - don't throw at build time
+let _stripe: Stripe | null = null;
 
-export const stripe = new Stripe(STRIPE_SECRET_KEY, {
-  apiVersion: API_VERSION,
-  typescript: true,
-});
+function getStripe(): Stripe {
+  if (!_stripe) {
+    if (!STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not set');
+    }
+    _stripe = new Stripe(STRIPE_SECRET_KEY, {
+      apiVersion: API_VERSION,
+      typescript: true,
+    });
+  }
+  return _stripe;
+}
+
+export const stripe = { get instance() { return getStripe(); } };
 
 export async function createCustomer(email: string, name?: string) {
-  const existing = await stripe.customers.list({ email, limit: 1 });
+  const s = getStripe();
+  const existing = await s.customers.list({ email, limit: 1 });
   if (existing.data.length > 0) return existing.data[0];
-  return stripe.customers.create({ email, name, metadata: { source: 'enatbet' } });
+  return s.customers.create({ email, name, metadata: { source: 'enatbet' } });
 }
 
 export async function createPaymentIntent(params: {
@@ -26,6 +38,7 @@ export async function createPaymentIntent(params: {
   metadata?: Record<string, string>;
   idempotencyKey?: string;
 }) {
+  const s = getStripe();
   const {
     amount,
     currency,
@@ -36,27 +49,37 @@ export async function createPaymentIntent(params: {
     idempotencyKey,
   } = params;
 
-  const intentParams: Stripe.PaymentIntentCreateParams = {
+  const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
     amount,
-    currency: currency.toLowerCase(),
+    currency,
     customer: customerId,
     automatic_payment_methods: { enabled: true },
     metadata,
   };
 
-  if (connectedAccountId && applicationFeeAmount != null) {
-    intentParams.application_fee_amount = applicationFeeAmount;
-    intentParams.transfer_data = { destination: connectedAccountId };
+  if (connectedAccountId && applicationFeeAmount) {
+    paymentIntentParams.application_fee_amount = applicationFeeAmount;
+    paymentIntentParams.transfer_data = { destination: connectedAccountId };
   }
 
-  const options: Stripe.RequestOptions = {};
-  if (idempotencyKey) options.idempotencyKey = idempotencyKey;
-
-  return stripe.paymentIntents.create(intentParams, options);
+  return s.paymentIntents.create(
+    paymentIntentParams,
+    idempotencyKey ? { idempotencyKey } : undefined
+  );
 }
 
 export async function createEphemeralKey(customerId: string, apiVersion: string) {
-  return stripe.ephemeralKeys.create({ customer: customerId }, { apiVersion });
+  const s = getStripe();
+  return s.ephemeralKeys.create(
+    { customer: customerId },
+    { apiVersion }
+  );
 }
 
-export { API_VERSION };
+export async function refundPayment(paymentIntentId: string, amount?: number) {
+  const s = getStripe();
+  return s.refunds.create({
+    payment_intent: paymentIntentId,
+    amount,
+  });
+}
