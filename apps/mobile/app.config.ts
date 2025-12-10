@@ -17,6 +17,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.enatbet.app',
+    infoPlist: {
+      NSLocationWhenInUseUsageDescription: 'Enatbet uses your location to show nearby properties.',
+      NSCameraUsageDescription: 'Enatbet uses your camera to take property photos.',
+      NSPhotoLibraryUsageDescription: 'Enatbet accesses your photos to upload property images.',
+    },
   },
   android: {
     package: 'com.enatbet.app',
@@ -24,17 +29,22 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#667eea',
     },
+    permissions: [
+      'ACCESS_FINE_LOCATION',
+      'ACCESS_COARSE_LOCATION',
+      'CAMERA',
+      'READ_EXTERNAL_STORAGE',
+    ],
   },
-  web: {
-    favicon: './assets/favicon.png',
-  },
-  plugins: ['expo-router'],
   extra: {
-    router: {
-      origin: false,
-    },
     eas: {
-      projectId: 'your-project-id',
+      projectId: '87162e09-bfe2-4db8-9c63-5eb65022b209',
     },
+  },
+  updates: {
+    url: 'https://u.expo.dev/87162e09-bfe2-4db8-9c63-5eb65022b209',
+  },
+  runtimeVersion: {
+    policy: 'appVersion',
   },
 });

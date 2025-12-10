@@ -11,17 +11,34 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../contexts/AuthContext";
+
+const COLORS = {
+  primary: '#667eea',
+  text: '#1a1a1a',
+  textMuted: '#666',
+  textLight: '#333',
+  border: '#ddd',
+  error: '#dc2626',
+  background: '#fff',
+  disabled: '#9ca3af',
+};
 
 export default function Signup() {
   const router = useRouter();
+  const { signUp } = useAuth();
+  
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({
     fullName: "",
     email: "",
     password: "",
+    terms: "",
   });
 
   const validateEmail = (email: string) => {
@@ -29,9 +46,10 @@ export default function Signup() {
   };
 
   const handleSignup = async () => {
-    setErrors({ fullName: "", email: "", password: "" });
+    setErrors({ fullName: "", email: "", password: "", terms: "" });
 
-    const newErrors = { fullName: "", email: "", password: "" };
+    const newErrors = { fullName: "", email: "", password: "", terms: "" };
+    
     if (!fullName.trim()) newErrors.fullName = "Full name is required";
     if (!email) {
       newErrors.email = "Email is required";
@@ -43,24 +61,31 @@ export default function Signup() {
     } else if (password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
     }
+    if (!agreedToTerms) {
+      newErrors.terms = "You must agree to the Terms and Privacy Policy";
+    }
 
-    if (newErrors.fullName || newErrors.email || newErrors.password) {
+    if (newErrors.fullName || newErrors.email || newErrors.password || newErrors.terms) {
       setErrors(newErrors);
       return;
     }
 
     setLoading(true);
     try {
-      // TODO: Add Firebase auth here
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      Alert.alert("Success", "Account created! Please sign in.");
-      router.replace("/login");
+      await signUp(email, password, fullName);
+      Alert.alert(
+        "Welcome to Enatbet! 🎉",
+        "Your account has been created successfully.",
+        [{ text: "Continue", onPress: () => router.replace("/(tabs)") }]
+      );
     } catch (error: any) {
       Alert.alert("Signup Failed", error.message || "Please try again");
     } finally {
       setLoading(false);
     }
   };
+
+  const isFormValid = fullName.trim() && email && password.length >= 6 && agreedToTerms;
 
   return (
     <KeyboardAvoidingView
@@ -79,6 +104,7 @@ export default function Signup() {
             <TextInput
               style={[styles.input, errors.fullName && styles.inputError]}
               placeholder="John Doe"
+              placeholderTextColor={COLORS.disabled}
               value={fullName}
               onChangeText={setFullName}
               autoComplete="name"
@@ -93,6 +119,7 @@ export default function Signup() {
             <TextInput
               style={[styles.input, errors.email && styles.inputError]}
               placeholder="your@email.com"
+              placeholderTextColor={COLORS.disabled}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -109,6 +136,7 @@ export default function Signup() {
             <TextInput
               style={[styles.input, errors.password && styles.inputError]}
               placeholder="At least 6 characters"
+              placeholderTextColor={COLORS.disabled}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -119,10 +147,43 @@ export default function Signup() {
             ) : null}
           </View>
 
+          {/* Terms and Privacy Checkbox */}
+          <View style={styles.termsContainer}>
+            <TouchableOpacity
+              style={styles.checkboxRow}
+              onPress={() => setAgreedToTerms(!agreedToTerms)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.checkbox, agreedToTerms && styles.checkboxChecked]}>
+                {agreedToTerms && (
+                  <Ionicons name="checkmark" size={16} color={COLORS.background} />
+                )}
+              </View>
+              <Text style={styles.termsText}>
+                I agree to the{" "}
+              </Text>
+            </TouchableOpacity>
+            <View style={styles.termsLinks}>
+              <TouchableOpacity onPress={() => router.push("/terms-of-service")}>
+                <Text style={styles.termsLink}>Terms of Service</Text>
+              </TouchableOpacity>
+              <Text style={styles.termsText}> and </Text>
+              <TouchableOpacity onPress={() => router.push("/privacy-policy")}>
+                <Text style={styles.termsLink}>Privacy Policy</Text>
+              </TouchableOpacity>
+            </View>
+            {errors.terms ? (
+              <Text style={styles.errorText}>{errors.terms}</Text>
+            ) : null}
+          </View>
+
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              (!isFormValid || loading) && styles.buttonDisabled,
+            ]}
             onPress={handleSignup}
-            disabled={loading}
+            disabled={!isFormValid || loading}
           >
             <Text style={styles.buttonText}>
               {loading ? "Creating Account..." : "Sign Up"}
@@ -152,39 +213,79 @@ export default function Signup() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: COLORS.background },
   scrollContent: { flexGrow: 1, justifyContent: "center", padding: 24 },
   header: { marginBottom: 32, alignItems: "center" },
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#1a1a1a",
+    color: COLORS.text,
     marginBottom: 8,
   },
-  subtitle: { fontSize: 16, color: "#666" },
+  subtitle: { fontSize: 16, color: COLORS.textMuted },
   form: { gap: 16 },
   inputGroup: { gap: 8 },
-  label: { fontSize: 14, fontWeight: "600", color: "#333" },
+  label: { fontSize: 14, fontWeight: "600", color: COLORS.textLight },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: COLORS.border,
     borderRadius: 8,
     padding: 16,
     fontSize: 16,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.background,
+    color: COLORS.text,
   },
-  inputError: { borderColor: "#dc2626" },
-  errorText: { fontSize: 14, color: "#dc2626" },
+  inputError: { borderColor: COLORS.error },
+  errorText: { fontSize: 14, color: COLORS.error, marginTop: 4 },
+  termsContainer: { 
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    marginRight: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+  },
+  checkboxChecked: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  termsText: {
+    fontSize: 14,
+    color: COLORS.textMuted,
+  },
+  termsLinks: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginLeft: 34,
+    marginTop: 2,
+  },
+  termsLink: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: "600",
+    textDecorationLine: "underline",
+  },
   button: {
-    backgroundColor: "#667eea",
+    backgroundColor: COLORS.primary,
     padding: 16,
     borderRadius: 8,
     marginTop: 8,
     alignItems: "center",
   },
-  buttonDisabled: { backgroundColor: "#9ca3af" },
-  buttonText: { color: "#fff", fontSize: 18, fontWeight: "600" },
+  buttonDisabled: { backgroundColor: COLORS.disabled },
+  buttonText: { color: COLORS.background, fontSize: 18, fontWeight: "600" },
   linkButton: { alignItems: "center", marginTop: 16 },
-  linkText: { color: "#666", fontSize: 16 },
-  linkHighlight: { color: "#667eea", fontWeight: "600" },
+  linkText: { color: COLORS.textMuted, fontSize: 16 },
+  linkHighlight: { color: COLORS.primary, fontWeight: "600" },
 });

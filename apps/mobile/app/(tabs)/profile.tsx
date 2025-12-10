@@ -58,10 +58,6 @@ export default function ProfileScreen() {
           <Text variant="titleMedium" style={styles.sectionTitle}>Support</Text>
           <List.Item title="Contact Us" description="Get help from our team" left={(props) => <List.Icon {...props} icon="email-outline" />} right={(props) => <List.Icon {...props} icon="chevron-right" />} onPress={() => router.push("/contact")} style={styles.listItem} />
           <Divider style={styles.divider} />
-          <Text variant="titleMedium" style={styles.sectionTitle}>Legal & Privacy</Text>
-          <List.Item title="Terms of Service" left={(props) => <List.Icon {...props} icon="file-document-outline" />} right={(props) => <List.Icon {...props} icon="chevron-right" />} onPress={() => router.push("/terms-of-service")} style={styles.listItem} />
-          <List.Item title="Privacy Policy" left={(props) => <List.Icon {...props} icon="shield-check-outline" />} right={(props) => <List.Icon {...props} icon="chevron-right" />} onPress={() => router.push("/privacy-policy")} style={styles.listItem} />
-          <Divider style={styles.divider} />
           <Button mode="outlined" onPress={handleSignOut} loading={isSigningOut} disabled={isSigningOut} style={styles.signOutButton} textColor="#DC2626">{isSigningOut ? "Signing Out..." : "Sign Out"}</Button>
           <View style={styles.footer}>
             <Text style={styles.footerText}>🇪🇹🏠🇪🇷 Enatbet</Text>
@@ -88,10 +84,6 @@ export default function ProfileScreen() {
         <Divider style={styles.divider} />
         <Text variant="titleMedium" style={styles.sectionTitle}>Support</Text>
         <List.Item title="Contact Us" description="Get help from our team" left={(props) => <List.Icon {...props} icon="email-outline" />} right={(props) => <List.Icon {...props} icon="chevron-right" />} onPress={() => router.push("/contact")} style={styles.listItem} />
-        <Divider style={styles.divider} />
-        <Text variant="titleMedium" style={styles.sectionTitle}>Legal & Privacy</Text>
-        <List.Item title="Terms of Service" left={(props) => <List.Icon {...props} icon="file-document-outline" />} right={(props) => <List.Icon {...props} icon="chevron-right" />} onPress={() => router.push("/terms-of-service")} style={styles.listItem} />
-        <List.Item title="Privacy Policy" left={(props) => <List.Icon {...props} icon="shield-check-outline" />} right={(props) => <List.Icon {...props} icon="chevron-right" />} onPress={() => router.push("/privacy-policy")} style={styles.listItem} />
         <View style={styles.footer}>
           <Text style={styles.footerText}>🇪🇹🏠🇪🇷 Enatbet</Text>
           <Text style={styles.versionText}>v1.0.0</Text>

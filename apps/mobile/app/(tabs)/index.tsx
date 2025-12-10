@@ -20,28 +20,17 @@ export default function HomeScreen() {
     >
       {/* Hero section */}
       <LinearGradient
-        colors={["#ec4899", "#7c3aed"]} // pink-500 → purple-600
+        colors={["#ec4899", "#7c3aed"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.hero}
       >
         <Text style={styles.heroFlags}>🇪🇹 ENATBET 🇪🇷</Text>
-
         <Text style={styles.heroTitle}>ENATBET</Text>
-
         <Text style={styles.heroTagline}>"Book a home, not just a room"</Text>
-
         <Text style={styles.heroSubtitle}>
           Connecting Ethiopian &amp; Eritrean diaspora communities worldwide
         </Text>
-
-        <TouchableOpacity
-          style={styles.heroButton}
-          activeOpacity={0.9}
-          onPress={() => router.push("/properties")}
-        >
-          <Text style={styles.heroButtonText}>Start Exploring</Text>
-        </TouchableOpacity>
       </LinearGradient>
 
       {/* Why Choose Enatbet */}
@@ -73,33 +62,23 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Bottom CTA / Auth */}
-      <View style={styles.section}>
-        <View style={styles.ctaBox}>
-          <Text style={styles.ctaTitle}>Ready to get started?</Text>
-          <Text style={styles.ctaText}>
-            Browse homes, connect with hosts, or list your own place for the
-            community.
-          </Text>
+      {/* Auth Buttons - Always visible */}
+      <View style={styles.authSection}>
+        <TouchableOpacity
+          style={styles.signInButton}
+          activeOpacity={0.8}
+          onPress={() => router.push("/login")}
+        >
+          <Text style={styles.signInButtonText}>Sign In</Text>
+        </TouchableOpacity>
 
-          <View style={styles.ctaButtonsRow}>
-            <TouchableOpacity
-              style={[styles.ctaButton, styles.ctaPrimaryButton]}
-              activeOpacity={0.9}
-              onPress={() => router.push("/login")}
-            >
-              <Text style={styles.ctaPrimaryText}>Sign In</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.ctaButton, styles.ctaSecondaryButton]}
-              activeOpacity={0.9}
-              onPress={() => router.push("/signup")}
-            >
-              <Text style={styles.ctaSecondaryText}>Create Account</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <TouchableOpacity
+          style={styles.createAccountButton}
+          activeOpacity={0.8}
+          onPress={() => router.push("/signup")}
+        >
+          <Text style={styles.createAccountButtonText}>Create Account</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -111,13 +90,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   content: {
-    paddingBottom: 32,
+    paddingBottom: 40,
   },
-
-  // Hero
   hero: {
     paddingHorizontal: 24,
-    paddingVertical: 56,
+    paddingVertical: 60,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -148,33 +125,17 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     maxWidth: 320,
   },
-  heroButton: {
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 999,
-  },
-  heroButtonText: {
-    color: "#ec4899",
-    fontSize: 16,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-
-  // Sections
   section: {
     paddingHorizontal: 24,
     paddingVertical: 24,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "700",
     textAlign: "center",
     marginBottom: 24,
     color: "#111827",
   },
-
-  // Feature cards
   card: {
     borderRadius: 16,
     borderWidth: 1,
@@ -183,15 +144,10 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     backgroundColor: "#ffffff",
     marginBottom: 16,
-    shadowColor: "#000000",
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
     alignItems: "center",
   },
   cardEmoji: {
-    fontSize: 32,
+    fontSize: 36,
     marginBottom: 12,
   },
   cardTitle: {
@@ -205,56 +161,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#4b5563",
     textAlign: "center",
+    lineHeight: 20,
   },
-
-  // CTA / Auth
-  ctaBox: {
-    borderRadius: 20,
-    backgroundColor: "#f9fafb",
-    paddingHorizontal: 20,
-    paddingVertical: 24,
+  authSection: {
+    paddingHorizontal: 24,
+    paddingBottom: 32,
   },
-  ctaTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 8,
-    textAlign: "center",
+  signInButton: {
+    backgroundColor: "#667eea",
+    paddingVertical: 16,
+    borderRadius: 25,
+    marginBottom: 12,
   },
-  ctaText: {
-    fontSize: 14,
-    color: "#4b5563",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  ctaButtonsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  ctaButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 999,
-    minWidth: 120,
-    alignItems: "center",
-    marginHorizontal: 6,
-  },
-  ctaPrimaryButton: {
-    backgroundColor: "#ec4899",
-  },
-  ctaPrimaryText: {
+  signInButtonText: {
     color: "#ffffff",
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "600",
+    textAlign: "center",
   },
-  ctaSecondaryButton: {
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+  createAccountButton: {
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: "#667eea",
+    paddingVertical: 16,
+    borderRadius: 25,
   },
-  ctaSecondaryText: {
-    color: "#111827",
-    fontSize: 15,
+  createAccountButtonText: {
+    color: "#667eea",
+    fontSize: 16,
     fontWeight: "600",
+    textAlign: "center",
   },
 });
