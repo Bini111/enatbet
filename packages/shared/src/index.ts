@@ -37,6 +37,3 @@ export type { Currency, StripeMinCurrency } from './constants/currencies';
 export * from './utils/money';
 export * from './utils/validation';
 export * from './utils/date';
-
-// Rate Limiter
-export * from './lib/rate-limiter';
