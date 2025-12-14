@@ -1,16 +1,9 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -19,38 +12,20 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "baseUrl": "./src",
     "plugins": [
       {
         "name": "next"
       }
     ],
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@/components/*": [
-        "./components/*"
-      ],
-      "@/store/*": [
-        "./store/*"
-      ],
-      "@/lib/*": [
-        "./lib/*"
-      ],
-      "@/app/*": [
-        "./app/*"
-      ]
-    }
+      "@/*": ["./src/*"],
+      "@enatbet/shared": ["../../packages/shared/src/index.ts"],
+      "@enatbet/shared/*": ["../../packages/shared/src/*"],
+      "@enatbet/firebase": ["../../packages/firebase/src/index.ts"],
+      "@enatbet/firebase/*": ["../../packages/firebase/src/*"]
+    },
+    "baseUrl": "."
   },
-  "include": [
-    "../../next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "../../.next/types/**/*.ts",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }
