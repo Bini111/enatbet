@@ -17,18 +17,68 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.enatbet.app"
+      "bundleIdentifier": "com.enatbet.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Enatbet needs camera access to take photos of your property listings.",
+        "NSPhotoLibraryUsageDescription": "Enatbet needs photo library access to select images for your property listings.",
+        "NSPhotoLibraryAddUsageDescription": "Enatbet needs permission to save photos to your library.",
+        "NSLocationWhenInUseUsageDescription": "Enatbet uses your location to show nearby properties and help guests find your listing.",
+        "NSLocationAlwaysUsageDescription": "Enatbet uses your location to show nearby properties."
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.enatbet.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#6366F1"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
     },
-    "plugins": []
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Enatbet needs access to your photos to upload property images.",
+          "cameraPermission": "Enatbet needs access to your camera to take property photos."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Enatbet uses your location to show nearby properties."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    }
   }
 }

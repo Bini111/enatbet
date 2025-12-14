@@ -16,8 +16,14 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-// Important for pnpm
-config.resolver.disableHierarchicalLookup = true;
+// Explicitly resolve packages that are hoisted to root
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  'expo-router': path.resolve(workspaceRoot, 'node_modules/expo-router'),
+};
+
+// Important for pnpm - but allow fallback to workspace root
+config.resolver.disableHierarchicalLookup = false;
 
 // Store Metro cache in a predictable place
 config.cacheStores = [
@@ -29,7 +35,6 @@ config.cacheStores = [
 // Avoid watching problematic dirs
 config.resolver.blockList = [
   /.*\/\.git\/.*/,
-  /.*\/node_modules\/.*\/node_modules\/.*/,
 ];
 
 module.exports = config;

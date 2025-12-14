@@ -74,6 +74,9 @@ importers:
       expo-file-system:
         specifier: ~17.0.1
         version: 17.0.1(expo@51.0.39)
+      expo-image-manipulator:
+        specifier: ~12.0.5
+        version: 12.0.5(expo@51.0.39)
       expo-image-picker:
         specifier: ~15.0.7
         version: 15.0.7(expo@51.0.39)
@@ -7492,6 +7495,15 @@ packages:
       expo: '*'
     dependencies:
       expo: 51.0.39(@babel/core@7.28.5)(@babel/preset-env@7.28.5)
+    dev: false
+
+  /expo-image-manipulator@12.0.5(expo@51.0.39):
+    resolution: {integrity: sha512-zJ8yINjckYw/yfoSuICt4yJ9xr112+W9e5QVXwK3nCAHr7sv45RQ5sxte0qppf594TPl+UoV6Tjim7WpoKipRQ==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 51.0.39(@babel/core@7.28.5)(@babel/preset-env@7.28.5)
+      expo-image-loader: 4.7.0(expo@51.0.39)
     dev: false
 
   /expo-image-picker@15.0.7(expo@51.0.39):

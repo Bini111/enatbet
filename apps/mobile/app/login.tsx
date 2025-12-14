@@ -54,15 +54,35 @@ export default function LoginScreen() {
         <Text variant="headlineLarge" style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>Sign in to continue</Text>
         {error && <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>}
-        <TextInput label="Email" value={email} onChangeText={(text) => { setEmail(text); setError(null); }} mode="outlined" keyboardType="email-address" autoCapitalize="none" autoComplete="email" style={styles.input} />
-        <View style={styles.passwordHeader}>
-          <Text style={styles.passwordLabel}>Password</Text>
-          <TouchableOpacity onPress={() => router.push("/forgot-password")}>
-            <Text style={styles.forgotPassword}>Forgot Password?</Text>
-          </TouchableOpacity>
-        </View>
-        <TextInput value={password} onChangeText={(text) => { setPassword(text); setError(null); }} mode="outlined" secureTextEntry={!showPassword} placeholder="Enter password" right={<TextInput.Icon icon={showPassword ? "eye-off" : "eye"} onPress={() => setShowPassword(!showPassword)} />} style={styles.input} />
+        
+        <TextInput 
+          label="Email" 
+          value={email} 
+          onChangeText={(text) => { setEmail(text); setError(null); }} 
+          mode="outlined" 
+          keyboardType="email-address" 
+          autoCapitalize="none" 
+          autoComplete="email" 
+          style={styles.input} 
+        />
+        
+        <TextInput 
+          label="Password"
+          value={password} 
+          onChangeText={(text) => { setPassword(text); setError(null); }} 
+          mode="outlined" 
+          secureTextEntry={!showPassword} 
+          placeholder="Enter password" 
+          right={<TextInput.Icon icon={showPassword ? "eye-off" : "eye"} onPress={() => setShowPassword(!showPassword)} />} 
+          style={styles.input} 
+        />
+        
+        <TouchableOpacity onPress={() => router.push("/forgot-password")} style={styles.forgotPasswordContainer}>
+          <Text style={styles.forgotPassword}>Forgot Password?</Text>
+        </TouchableOpacity>
+        
         <Button mode="contained" onPress={handleLogin} loading={isLoading} disabled={isLoading} style={styles.loginButton} buttonColor="#6366F1">{isLoading ? "Signing in..." : "Sign In"}</Button>
+        
         <View style={styles.signupRow}>
           <Text style={styles.signupText}>Do not have an account? </Text>
           <TouchableOpacity onPress={() => router.push("/signup")}>
@@ -82,8 +102,7 @@ const styles = StyleSheet.create({
   errorBox: { backgroundColor: "#FEE2E2", padding: 12, borderRadius: 8, marginBottom: 16 },
   errorText: { color: "#DC2626", fontSize: 14 },
   input: { marginBottom: 16, backgroundColor: "#fff" },
-  passwordHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
-  passwordLabel: { fontSize: 12, color: "#666" },
+  forgotPasswordContainer: { alignSelf: "flex-end", marginTop: -8, marginBottom: 16 },
   forgotPassword: { color: "#6366F1", fontSize: 14, fontWeight: "500" },
   loginButton: { marginTop: 8, paddingVertical: 6 },
   signupRow: { flexDirection: "row", justifyContent: "center", marginTop: 24 },
