@@ -8,7 +8,7 @@ const nextConfig = {
   },
   transpilePackages: ['@enatbet/firebase', '@enatbet/shared', 'undici'],
   experimental: {
-    serverComponentsExternalPackages: ['firebase-admin'],
+    serverComponentsExternalPackages: ['firebase-admin', 'undici'],
   },
 }
 
