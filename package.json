@@ -2,10 +2,11 @@
   "name": "enatbet",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@8.15.4",
+  "engines": {
+    "node": ">=20.0.0 <23.0.0",
+    "pnpm": ">=8.0.0"
+  },
   "scripts": {
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter=web",
@@ -27,30 +28,15 @@
     "firebase-tools": "^13.0.0"
   },
   "pnpm": {
-    "overrides": {
-      "react": "18.2.0",
-      "react-dom": "18.2.0",
-      "react-native": "0.74.5",
-      "@react-native/gradle-plugin": "0.74.87",
-      "@types/react": "18.2.45",
-      "@types/react-native": "0.72.8"
-    },
     "peerDependencyRules": {
       "ignoreMissing": [
-        "react",
-        "react-dom",
-        "react-native"
-      ]
+        "@babel/*",
+        "expo-modules-*"
+      ],
+      "allowedVersions": {
+        "react": "18",
+        "react-dom": "18"
+      }
     }
-  },
-  "packageManager": "pnpm@8.15.0",
-  "pnpm": {
-    "overrides": {
-      "undici": "5.28.4"
-    }
-  },
-  "engines": {
-    "node": ">=20.0.0",
-    "pnpm": ">=8.0.0"
   }
 }
