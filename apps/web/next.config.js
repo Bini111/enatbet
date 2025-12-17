@@ -6,9 +6,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  serverExternalPackages: ['undici', 'firebase-admin'],
+  transpilePackages: ['@enatbet/firebase', '@enatbet/shared', 'undici'],
   experimental: {
-    serverComponentsExternalPackages: ['undici', 'firebase-admin'],
+    serverComponentsExternalPackages: ['firebase-admin'],
   },
 }
 
