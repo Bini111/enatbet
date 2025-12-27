@@ -11,10 +11,9 @@ export default function DownloadPage() {
         </p>
 
         <div className="space-y-4">
-          
+          <Link
             href="https://apps.apple.com/app/enatbet"
             target="_blank"
-            rel="noopener noreferrer"
             className="flex items-center justify-center gap-3 w-full bg-black text-white py-4 px-6 rounded-xl hover:bg-gray-800 transition-colors"
           >
             <span className="text-2xl">🍎</span>
@@ -22,12 +21,11 @@ export default function DownloadPage() {
               <p className="text-xs">Download on the</p>
               <p className="text-lg font-semibold">App Store</p>
             </div>
-          </a>
+          </Link>
 
-          
+          <Link
             href="https://play.google.com/store/apps/details?id=com.enatbet.app"
             target="_blank"
-            rel="noopener noreferrer"
             className="flex items-center justify-center gap-3 w-full bg-black text-white py-4 px-6 rounded-xl hover:bg-gray-800 transition-colors"
           >
             <span className="text-2xl">▶️</span>
@@ -35,7 +33,7 @@ export default function DownloadPage() {
               <p className="text-xs">Get it on</p>
               <p className="text-lg font-semibold">Google Play</p>
             </div>
-          </a>
+          </Link>
         </div>
 
         <div className="mt-8 pt-6 border-t border-gray-200">

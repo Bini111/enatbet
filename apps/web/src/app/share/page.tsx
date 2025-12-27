@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function SharePage() {
   const [copied, setCopied] = useState(false);
@@ -23,41 +24,39 @@ export default function SharePage() {
         </p>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
-          
+          <Link
             href={`mailto:?subject=Check out Enatbet&body=${encodeURIComponent(shareText + '\n\n' + shareUrl)}`}
             className="bg-gray-600 text-white py-4 px-4 rounded-xl hover:opacity-90 transition-opacity flex flex-col items-center gap-2"
           >
             <span className="text-2xl">📧</span>
             <span className="font-medium">Email</span>
-          </a>
+          </Link>
 
-          
+          <Link
             href={`sms:?body=${encodeURIComponent(shareText + ' ' + shareUrl)}`}
             className="bg-green-500 text-white py-4 px-4 rounded-xl hover:opacity-90 transition-opacity flex flex-col items-center gap-2"
           >
             <span className="text-2xl">💬</span>
             <span className="font-medium">SMS</span>
-          </a>
+          </Link>
 
-          
+          <Link
             href={`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`}
             target="_blank"
-            rel="noopener noreferrer"
             className="bg-green-600 text-white py-4 px-4 rounded-xl hover:opacity-90 transition-opacity flex flex-col items-center gap-2"
           >
             <span className="text-2xl">📱</span>
             <span className="font-medium">WhatsApp</span>
-          </a>
+          </Link>
 
-          
+          <Link
             href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`}
             target="_blank"
-            rel="noopener noreferrer"
             className="bg-blue-500 text-white py-4 px-4 rounded-xl hover:opacity-90 transition-opacity flex flex-col items-center gap-2"
           >
             <span className="text-2xl">✈️</span>
             <span className="font-medium">Telegram</span>
-          </a>
+          </Link>
         </div>
 
         <div className="border-t border-gray-200 pt-6">
