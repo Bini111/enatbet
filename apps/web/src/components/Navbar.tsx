@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/authStore';
-import { Settings, LogIn, UserPlus, HelpCircle, Shield, LogOut } from 'lucide-react';
+import { Settings, LogIn, UserPlus, HelpCircle, Shield, LogOut, Home, Share2, Download } from 'lucide-react';
 
 export default function Navbar() {
   const { user, signOutUser } = useAuthStore();
@@ -54,12 +54,6 @@ export default function Navbar() {
             <Link href="/properties" className="text-gray-700 hover:text-pink-600 transition-colors">
               Properties
             </Link>
-            <Link href="/become-a-host" className="text-gray-700 hover:text-pink-600 transition-colors">
-              Become a Host
-            </Link>
-            <Link href="/about" className="text-gray-700 hover:text-pink-600 transition-colors">
-              About
-            </Link>
             
             {/* Gear Menu */}
             <div className="relative" ref={menuRef}>
@@ -81,6 +75,18 @@ export default function Navbar() {
                       <Link href="/settings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
                         <Settings className="w-5 h-5 text-gray-500" />
                         <span>Settings</span>
+                      </Link>
+                      <Link href="/become-a-host" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
+                        <Home className="w-5 h-5 text-gray-500" />
+                        <span>Become a Host</span>
+                      </Link>
+                      <Link href="/download" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
+                        <Download className="w-5 h-5 text-gray-500" />
+                        <span>Download App</span>
+                      </Link>
+                      <Link href="/share" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
+                        <Share2 className="w-5 h-5 text-gray-500" />
+                        <span>Share</span>
                       </Link>
                       <Link href="/contact" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
                         <HelpCircle className="w-5 h-5 text-gray-500" />
@@ -114,6 +120,14 @@ export default function Navbar() {
                         <span>Sign Up</span>
                       </Link>
                       <div className="border-t border-gray-100 mt-2 pt-2">
+                        <Link href="/become-a-host" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
+                          <Home className="w-5 h-5 text-gray-500" />
+                          <span>Become a Host</span>
+                        </Link>
+                        <Link href="/download" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
+                          <Download className="w-5 h-5 text-gray-500" />
+                          <span>Download App</span>
+                        </Link>
                         <Link href="/contact" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
                           <HelpCircle className="w-5 h-5 text-gray-500" />
                           <span>Help</span>
@@ -138,6 +152,7 @@ export default function Navbar() {
       {/* Mobile dropdown */}
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200 py-2">
+          <Link href="/properties" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Properties</Link>
           {user ? (
             <>
               <div className="px-4 py-2 border-b border-gray-100">
@@ -145,6 +160,9 @@ export default function Navbar() {
                 <p className="text-sm text-gray-500">{user.email}</p>
               </div>
               <Link href="/settings" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Settings</Link>
+              <Link href="/become-a-host" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Become a Host</Link>
+              <Link href="/download" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Download App</Link>
+              <Link href="/share" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Share</Link>
               <Link href="/contact" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Help</Link>
               {isAdmin && (
                 <Link href="/admin" onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-pink-600">Admin Panel</Link>
@@ -155,6 +173,8 @@ export default function Navbar() {
             <>
               <Link href="/login" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Sign In</Link>
               <Link href="/signup" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Sign Up</Link>
+              <Link href="/become-a-host" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Become a Host</Link>
+              <Link href="/download" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Download App</Link>
               <Link href="/contact" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Help</Link>
             </>
           )}
