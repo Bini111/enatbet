@@ -1,12 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuthStore } from '@/store/authStore';
 
 export default function Footer() {
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === 'admin' || user?.isAdmin === true;
-
   return (
     <footer className="bg-gray-900 text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -40,24 +36,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-8">
-          <h3 className="font-semibold mb-4">Legal</h3>
-          <ul className="space-y-2 text-gray-400">
-            <li><Link href="/terms-of-service" className="hover:text-white">Terms of Service</Link></li>
-            <li><Link href="/privacy-policy" className="hover:text-white">Privacy Policy</Link></li>
-          </ul>
-        </div>
-
-        <div className="border-t border-gray-800 mt-8 pt-8 flex justify-between items-center">
-          <p className="text-gray-400">© 2025 Enatbet. All rights reserved.</p>
-          {isAdmin && (
-            <Link 
-              href="/admin" 
-              className="text-gray-600 hover:text-gray-400 text-sm"
-            >
-              Admin
-            </Link>
-          )}
+        <div className="border-t border-gray-800 mt-8 pt-8">
+          <p className="text-gray-400 text-center">© 2025 Enatbet. All rights reserved.</p>
         </div>
       </div>
     </footer>

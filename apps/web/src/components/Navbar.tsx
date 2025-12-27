@@ -4,12 +4,14 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/authStore';
-import { Settings, User, LogIn, UserPlus, Home, HelpCircle, FileText, Shield, ChevronRight } from 'lucide-react';
+import { Settings, LogIn, UserPlus, HelpCircle, Shield, LogOut } from 'lucide-react';
 
 export default function Navbar() {
-  const { user } = useAuthStore();
+  const { user, signOutUser } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const isAdmin = user?.role === 'admin' || user?.isAdmin === true;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -20,6 +22,13 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleSignOut = async () => {
+    document.cookie = 'adminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    await signOutUser();
+    setMenuOpen(false);
+    window.location.href = '/';
+  };
 
   return (
     <nav className="bg-white shadow-sm border-b">
@@ -52,7 +61,7 @@ export default function Navbar() {
               About
             </Link>
             
-            {/* Gear Menu - Always visible */}
+            {/* Gear Menu */}
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
@@ -62,10 +71,9 @@ export default function Navbar() {
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
                   {user ? (
                     <>
-                      {/* Logged in menu */}
                       <div className="px-4 py-3 border-b border-gray-100">
                         <p className="font-medium text-gray-900">{user.displayName || 'User'}</p>
                         <p className="text-sm text-gray-500">{user.email}</p>
@@ -73,12 +81,26 @@ export default function Navbar() {
                       <Link href="/settings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
                         <Settings className="w-5 h-5 text-gray-500" />
                         <span>Settings</span>
-                        <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
                       </Link>
+                      <Link href="/contact" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
+                        <HelpCircle className="w-5 h-5 text-gray-500" />
+                        <span>Help</span>
+                      </Link>
+                      {isAdmin && (
+                        <Link href="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-pink-50 text-pink-600">
+                          <Shield className="w-5 h-5" />
+                          <span>Admin Panel</span>
+                        </Link>
+                      )}
+                      <div className="border-t border-gray-100 mt-2">
+                        <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-500 w-full">
+                          <LogOut className="w-5 h-5" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
                     </>
                   ) : (
                     <>
-                      {/* Not logged in menu */}
                       <div className="px-4 py-3 border-b border-gray-100">
                         <p className="font-medium text-gray-900">Welcome</p>
                         <p className="text-sm text-gray-500">Sign in to access your account</p>
@@ -92,21 +114,9 @@ export default function Navbar() {
                         <span>Sign Up</span>
                       </Link>
                       <div className="border-t border-gray-100 mt-2 pt-2">
-                        <Link href="/become-a-host" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
-                          <Home className="w-5 h-5 text-gray-500" />
-                          <span>Become a Host</span>
-                        </Link>
                         <Link href="/contact" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
                           <HelpCircle className="w-5 h-5 text-gray-500" />
                           <span>Help</span>
-                        </Link>
-                        <Link href="/terms-of-service" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
-                          <FileText className="w-5 h-5 text-gray-500" />
-                          <span>Terms of Service</span>
-                        </Link>
-                        <Link href="/privacy-policy" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
-                          <Shield className="w-5 h-5 text-gray-500" />
-                          <span>Privacy Policy</span>
                         </Link>
                       </div>
                     </>
@@ -135,12 +145,16 @@ export default function Navbar() {
                 <p className="text-sm text-gray-500">{user.email}</p>
               </div>
               <Link href="/settings" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Settings</Link>
+              <Link href="/contact" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Help</Link>
+              {isAdmin && (
+                <Link href="/admin" onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-pink-600">Admin Panel</Link>
+              )}
+              <button onClick={handleSignOut} className="block w-full text-left px-4 py-3 text-red-500">Sign Out</button>
             </>
           ) : (
             <>
               <Link href="/login" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Sign In</Link>
               <Link href="/signup" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Sign Up</Link>
-              <Link href="/become-a-host" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Become a Host</Link>
               <Link href="/contact" onClick={() => setMenuOpen(false)} className="block px-4 py-3">Help</Link>
             </>
           )}
