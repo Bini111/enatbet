@@ -1,76 +1,62 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
+
+const ADMIN_SECRET = 'Enatbet@11';
 
 export default function AdminLoginPage() {
+  const [code, setCode] = useState('');
   const [error, setError] = useState('');
-  const [checking, setChecking] = useState(true);
-  const { user } = useAuthStore();
   const router = useRouter();
 
-  useEffect(() => {
-    if (user === null) {
-      setChecking(false);
-      return;
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    if (user) {
-      // Check if user is admin
-      if (user.role === 'admin' || user.isAdmin === true) {
-        // Set admin session cookie
-        document.cookie = `adminSession=${user.uid}; path=/; max-age=86400; secure; samesite=strict`;
-        router.push('/admin');
-      } else {
-        setError('Access denied. Admin privileges required.');
-        setChecking(false);
-      }
+    if (code === ADMIN_SECRET) {
+      document.cookie = 'adminToken=enatbet_admin_2025_secret; path=/; max-age=604800; secure; samesite=strict';
+      router.push('/admin');
+    } else {
+      setError('Invalid access code');
+      setCode('');
     }
-  }, [user, router]);
-
-  if (checking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600" />
-      </div>
-    );
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
-        <h1 className="text-2xl font-bold mb-6">Admin Access</h1>
+      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+        <div className="text-center mb-6">
+          <span className="text-4xl">🔐</span>
+          <h1 className="text-2xl font-bold mt-2">Admin Access</h1>
+          <p className="text-gray-500 text-sm mt-1">Enter your access code</p>
+        </div>
         
         {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-center">
             {error}
           </div>
         )}
         
-        {!user ? (
-          <div>
-            <p className="text-gray-600 mb-4">Please sign in to access the admin panel.</p>
-            
-              href="/login"
-              className="inline-block bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700"
-            >
-              Sign In
-            </a>
-          </div>
-        ) : (
-          <div>
-            <p className="text-gray-600 mb-4">
-              Signed in as {user.email}
-            </p>
-            
-              href="/"
-              className="inline-block bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700"
-            >
-              Return Home
-            </a>
-          </div>
-        )}
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="Access Code"
+            className="w-full px-4 py-3 border rounded-lg mb-4 text-center text-lg tracking-widest"
+            autoFocus
+          />
+          <button
+            type="submit"
+            className="w-full bg-pink-600 text-white py-3 rounded-lg hover:bg-pink-700 font-medium"
+          >
+            Enter
+          </button>
+        </form>
+        
+        <a href="/" className="block text-center text-gray-500 text-sm mt-4 hover:text-gray-700">
+          ← Back to Home
+        </a>
       </div>
     </div>
   );
