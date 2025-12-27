@@ -67,16 +67,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isInitializing, setIsInitializing] = useState(true);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  // Fetch and validate user data from Firestore
-  const fetchUserData = async (uid: string): Promise<UserData | null> => {
+  // Fetch user data from Firestore, auto-create if missing
+  const fetchUserData = async (uid: string, firebaseUser?: User): Promise<UserData | null> => {
     try {
-      const userDoc = await getDoc(doc(db, 'users', uid));
+      const userDocRef = doc(db, 'users', uid);
+      const userDoc = await getDoc(userDocRef);
       
       if (!userDoc.exists()) {
-        console.warn('[AuthContext] User document not found for uid:', uid);
+        console.warn('[AuthContext] User document not found, creating for uid:', uid);
+        
+        // Auto-create missing document
+        const newUserData = {
+          uid,
+          email: firebaseUser?.email || null,
+          displayName: firebaseUser?.displayName || 'User',
+          role: 'guest' as UserRole,
+          profileComplete: false,
+          emailVerified: firebaseUser?.emailVerified || false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+        
+        await setDoc(userDocRef, newUserData);
+        
+        // Fetch again to get real Timestamps
+        const createdDoc = await getDoc(userDocRef);
+        if (createdDoc.exists()) {
+          return validateUserData(uid, createdDoc.data());
+        }
         return null;
       }
-
+      
       const data = userDoc.data();
       return validateUserData(uid, data);
     } catch (error) {
@@ -91,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(firebaseUser);
       
       if (firebaseUser) {
-        const data = await fetchUserData(firebaseUser.uid);
+        const data = await fetchUserData(firebaseUser.uid, firebaseUser);
         setUserData(data);
       } else {
         setUserData(null);
@@ -114,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAuthenticating(true);
     try {
       const credential = await signInWithEmailAndPassword(auth, trimmedEmail, password);
-      const data = await fetchUserData(credential.user.uid);
+      const data = await fetchUserData(credential.user.uid, credential.user);
       setUserData(data);
     } catch (error: unknown) {
       console.error('[AuthContext] Sign in error:', error);
@@ -159,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       // Fetch the created document to get real Timestamps (not FieldValue)
-      const data = await fetchUserData(firebaseUser.uid);
+      const data = await fetchUserData(firebaseUser.uid, firebaseUser);
       setUserData(data);
     } catch (error: unknown) {
       console.error('[AuthContext] Sign up error:', error);

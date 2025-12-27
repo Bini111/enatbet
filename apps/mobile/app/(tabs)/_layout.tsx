@@ -28,20 +28,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="bookings"
+        name="messages"
         options={{
-          title: "Bookings",
+          title: "Messages",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
+            <Ionicons name="chatbubbles" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="settings"
         options={{
-          title: "Profile",
+          title: "Settings",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+            <Ionicons name="settings" size={size} color={color} />
           ),
         }}
       />

@@ -1,111 +1,300 @@
 import React, { useState } from "react";
-import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity } from "react-native";
+import { 
+  View, 
+  StyleSheet, 
+  ScrollView, 
+  KeyboardAvoidingView, 
+  Platform, 
+  TouchableOpacity,
+  Alert 
+} from "react-native";
 import { Text, TextInput, Button } from "react-native-paper";
 import { router } from "expo-router";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { 
+  getAuth, 
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail
+} from "firebase/auth";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const validateForm = (): string | null => {
+    if (!email.trim()) return "Please enter your email";
+    if (!EMAIL_REGEX.test(email.trim().toLowerCase())) return "Please enter a valid email";
+    if (!password) return "Please enter your password";
+    return null;
+  };
 
   const handleLogin = async () => {
-    const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedEmail) { setError("Please enter your email"); return; }
-    if (!EMAIL_REGEX.test(trimmedEmail)) { setError("Please enter a valid email address"); return; }
-    if (!password) { setError("Please enter your password"); return; }
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
 
     try {
       const auth = getAuth();
-      await signInWithEmailAndPassword(auth, trimmedEmail, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email.trim().toLowerCase(),
+        password
+      );
+
+      // Check if email is verified
+      if (!userCredential.user.emailVerified) {
+        Alert.alert(
+          "Email Not Verified",
+          "Your email is not verified. Would you like us to send a new verification link?",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Resend",
+              onPress: async () => {
+                try {
+                  await sendEmailVerification(userCredential.user);
+                  Alert.alert("Email Sent", "Please check your inbox and verify your email.");
+                } catch (err) {
+                  Alert.alert("Error", "Failed to send verification email.");
+                }
+              },
+            },
+          ]
+        );
+        // Still allow login but show warning
+      }
+
+      // Navigate to home
       router.replace("/(tabs)");
-    } catch (err: unknown) {
-      const firebaseError = err as { code?: string };
-      switch (firebaseError.code) {
-        case "auth/user-not-found":
-        case "auth/wrong-password":
-        case "auth/invalid-credential":
-          setError("Invalid email or password");
-          break;
-        case "auth/too-many-requests":
-          setError("Too many attempts. Please try again later");
-          break;
-        case "auth/network-request-failed":
-          setError("Network error. Please check your connection");
-          break;
-        default:
-          setError("Sign in failed. Please try again");
+    } catch (err: any) {
+      console.error("Login error:", err);
+      if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+        setError("Invalid email or password. Please try again.");
+      } else if (err.code === "auth/too-many-requests") {
+        setError("Too many failed attempts. Please try again later.");
+      } else if (err.code === "auth/invalid-credential") {
+        setError("Invalid email or password. Please try again.");
+      } else {
+        setError("Failed to sign in. Please try again.");
       }
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      Alert.alert("Enter Email", "Please enter your email address first.");
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(email.trim().toLowerCase())) {
+      Alert.alert("Invalid Email", "Please enter a valid email address.");
+      return;
+    }
+
+    try {
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, email.trim().toLowerCase());
+      Alert.alert(
+        "Password Reset Email Sent",
+        "Check your inbox for instructions to reset your password."
+      );
+    } catch (err: any) {
+      if (err.code === "auth/user-not-found") {
+        Alert.alert("Error", "No account found with this email.");
+      } else {
+        Alert.alert("Error", "Failed to send reset email. Please try again.");
+      }
+    }
+  };
+
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
-      <View style={styles.content}>
-        <Text variant="headlineLarge" style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to continue</Text>
-        {error && <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>}
-        
-        <TextInput 
-          label="Email" 
-          value={email} 
-          onChangeText={(text) => { setEmail(text); setError(null); }} 
-          mode="outlined" 
-          keyboardType="email-address" 
-          autoCapitalize="none" 
-          autoComplete="email" 
-          style={styles.input} 
-        />
-        
-        <TextInput 
-          label="Password"
-          value={password} 
-          onChangeText={(text) => { setPassword(text); setError(null); }} 
-          mode="outlined" 
-          secureTextEntry={!showPassword} 
-          placeholder="Enter password" 
-          right={<TextInput.Icon icon={showPassword ? "eye-off" : "eye"} onPress={() => setShowPassword(!showPassword)} />} 
-          style={styles.input} 
-        />
-        
-        <TouchableOpacity onPress={() => router.push("/forgot-password")} style={styles.forgotPasswordContainer}>
-          <Text style={styles.forgotPassword}>Forgot Password?</Text>
-        </TouchableOpacity>
-        
-        <Button mode="contained" onPress={handleLogin} loading={isLoading} disabled={isLoading} style={styles.loginButton} buttonColor="#6366F1">{isLoading ? "Signing in..." : "Sign In"}</Button>
-        
-        <View style={styles.signupRow}>
-          <Text style={styles.signupText}>Do not have an account? </Text>
-          <TouchableOpacity onPress={() => router.push("/signup")}>
-            <Text style={styles.signupLink}>Sign Up</Text>
-          </TouchableOpacity>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"} 
+      style={styles.container}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerEmoji}>🇪🇹 🇪🇷</Text>
+          <Text style={styles.headerTitle}>Welcome Back</Text>
+          <Text style={styles.headerSubtitle}>Sign in to your Enatbet account</Text>
         </View>
-      </View>
+
+        <View style={styles.formSection}>
+          {error && (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          <TextInput
+            label="Email"
+            value={email}
+            onChangeText={(t) => { setEmail(t); setError(null); }}
+            mode="outlined"
+            style={styles.input}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+
+          <TextInput
+            label="Password"
+            value={password}
+            onChangeText={(t) => { setPassword(t); setError(null); }}
+            mode="outlined"
+            style={styles.input}
+            secureTextEntry={!showPassword}
+            right={
+              <TextInput.Icon 
+                icon={showPassword ? "eye-off" : "eye"} 
+                onPress={() => setShowPassword(!showPassword)} 
+              />
+            }
+          />
+
+          <TouchableOpacity 
+            onPress={handleForgotPassword}
+            style={styles.forgotPassword}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
+
+          <Button
+            mode="contained"
+            onPress={handleLogin}
+            loading={isLoading}
+            disabled={isLoading}
+            style={styles.submitButton}
+            buttonColor="#6366F1"
+          >
+            {isLoading ? "Signing In..." : "Sign In"}
+          </Button>
+
+          <View style={styles.signUpPrompt}>
+            <Text style={styles.signUpText}>Don't have an account? </Text>
+            <TouchableOpacity onPress={() => router.push("/signup")}>
+              <Text style={styles.signUpLink}>Create Account</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Info Box */}
+        <View style={styles.infoBox}>
+          <Text style={styles.infoTitle}>🔐 Account Security</Text>
+          <Text style={styles.infoText}>
+            Your email must be verified to become a host. If you haven't verified yet, 
+            we'll send you a verification link after signing in.
+          </Text>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  content: { flex: 1, padding: 24, justifyContent: "center" },
-  title: { textAlign: "center", fontWeight: "bold", marginBottom: 8 },
-  subtitle: { textAlign: "center", color: "#666", marginBottom: 32 },
-  errorBox: { backgroundColor: "#FEE2E2", padding: 12, borderRadius: 8, marginBottom: 16 },
-  errorText: { color: "#DC2626", fontSize: 14 },
-  input: { marginBottom: 16, backgroundColor: "#fff" },
-  forgotPasswordContainer: { alignSelf: "flex-end", marginTop: -8, marginBottom: 16 },
-  forgotPassword: { color: "#6366F1", fontSize: 14, fontWeight: "500" },
-  loginButton: { marginTop: 8, paddingVertical: 6 },
-  signupRow: { flexDirection: "row", justifyContent: "center", marginTop: 24 },
-  signupText: { color: "#666" },
-  signupLink: { color: "#6366F1", fontWeight: "600" },
+  container: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  header: {
+    backgroundColor: "#6366F1",
+    padding: 24,
+    paddingTop: 48,
+    alignItems: "center",
+  },
+  headerEmoji: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: "#E0E7FF",
+  },
+  formSection: {
+    padding: 20,
+  },
+  errorBox: {
+    backgroundColor: "#FEE2E2",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: "#DC2626",
+    fontSize: 14,
+  },
+  input: {
+    marginBottom: 12,
+    backgroundColor: "#fff",
+  },
+  forgotPassword: {
+    alignSelf: "flex-end",
+    marginBottom: 20,
+  },
+  forgotPasswordText: {
+    color: "#6366F1",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  submitButton: {
+    paddingVertical: 6,
+    borderRadius: 25,
+  },
+  signUpPrompt: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 24,
+  },
+  signUpText: {
+    color: "#6B7280",
+    fontSize: 14,
+  },
+  signUpLink: {
+    color: "#6366F1",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  infoBox: {
+    backgroundColor: "#EFF6FF",
+    marginHorizontal: 20,
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 16,
+  },
+  infoTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1E40AF",
+    marginBottom: 8,
+  },
+  infoText: {
+    fontSize: 13,
+    color: "#3B82F6",
+    lineHeight: 20,
+  },
 });

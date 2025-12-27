@@ -18,7 +18,7 @@ import {
   doc,
   getDoc,
   setDoc,
-  serverTimestamp,
+  Timestamp,
   type Firestore,
 } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
@@ -81,27 +81,48 @@ export async function createUser(
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Update display name
+    // Update display name in Firebase Auth
     await updateProfile(user, { displayName });
 
+    // Use Timestamp.now() instead of serverTimestamp() for rules compatibility
+    const now = Timestamp.now();
+
     // Create user document in Firestore
+    // NOTE: Do NOT include protected fields (role, verified, isAdmin, banned)
+    // These are set by admin/server only via custom claims or admin SDK
     const userDoc = {
-      uid: user.uid,
       email: user.email,
       displayName,
-      role: 'guest',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      emailVerified: false,
+      createdAt: now,
+      updatedAt: now,
       profileComplete: false,
     };
 
     await setDoc(doc(db, 'users', user.uid), userDoc);
 
-    return { ...userDoc, uid: user.uid, email: user.email! };
+    return { 
+      uid: user.uid, 
+      email: user.email!, 
+      displayName,
+      createdAt: now,
+      updatedAt: now,
+      profileComplete: false,
+    };
   } catch (error: any) {
     console.error('[FIREBASE] Create user error:', error);
-    throw new Error(error.message || 'Failed to create account');
+    
+    switch (error.code) {
+      case 'auth/email-already-in-use':
+        throw new Error('An account with this email already exists');
+      case 'auth/invalid-email':
+        throw new Error('Please enter a valid email address');
+      case 'auth/weak-password':
+        throw new Error('Password should be at least 6 characters');
+      case 'permission-denied':
+        throw new Error('Unable to create account. Please try again.');
+      default:
+        throw new Error(error.message || 'Failed to create account');
+    }
   }
 }
 
@@ -165,7 +186,6 @@ export function waitForAuth(): Promise<User | null> {
   });
 }
 
-export default app;
 /**
  * Send password reset email
  */
@@ -194,3 +214,56 @@ export async function sendPasswordResetEmail(email: string) {
     }
   }
 }
+
+/**
+ * Update user profile
+ */
+export async function updateUserProfile(uid: string, data: {
+  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  bio?: string;
+  location?: string;
+  photoURL?: string;
+  instagramHandle?: string;
+  twitterHandle?: string;
+  website?: string;
+}) {
+  if (typeof window === 'undefined') throw new Error('Auth is only available on client side');
+  
+  try {
+    const now = Timestamp.now();
+    
+    const updateData: Record<string, any> = {
+      ...data,
+      updatedAt: now,
+    };
+    
+    // Remove undefined values
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
+
+    await setDoc(doc(db, 'users', uid), updateData, { merge: true });
+
+    // If displayName changed, also update Firebase Auth profile
+    if (data.displayName && auth.currentUser) {
+      await updateProfile(auth.currentUser, { displayName: data.displayName });
+    }
+
+    // If photoURL changed, also update Firebase Auth profile
+    if (data.photoURL && auth.currentUser) {
+      await updateProfile(auth.currentUser, { photoURL: data.photoURL });
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('[FIREBASE] Update profile error:', error);
+    throw new Error(error.message || 'Failed to update profile');
+  }
+}
+
+export default app;

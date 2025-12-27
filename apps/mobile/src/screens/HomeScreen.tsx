@@ -1,400 +1,656 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   Image,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
   Dimensions,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
+  Alert,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { collection, query, where, limit, getDocs, orderBy } from "firebase/firestore";
+import { db } from "../../lib/firebase";
+import { useAuthStore } from "../store/authStore";
+import { RootStackParamList } from "../navigation/types";
 
-const { width } = Dimensions.get('window');
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-interface Property {
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const CARD_WIDTH = SCREEN_WIDTH * 0.7;
+
+interface Listing {
   id: string;
   title: string;
-  location: string;
-  price: number;
-  imageUrl?: string;
-  bedrooms: number;
-  bathrooms: number;
+  pricePerNight: number;
+  currency: string;
+  city: string;
+  country: string;
+  photos: { url: string }[];
+  coverPhoto?: string;
+  averageRating?: number;
+  reviewCount?: number;
+  propertyType?: string;
 }
 
-interface HomeScreenProps {
-  navigation?: any;
-}
-
-export default function HomeScreen({ navigation }: HomeScreenProps) {
-  const [properties, setProperties] = useState<Property[]>([]);
+export default function HomeScreen() {
+  const navigation = useNavigation<NavigationProp>();
+  const { user } = useAuthStore();
+  const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadProperties();
-  }, []);
-
-  async function loadProperties() {
+  const fetchFeaturedListings = useCallback(async () => {
     try {
-      const mockProperties: Property[] = [
-        {
-          id: '1',
-          title: 'Modern Apartment in Addis Ababa',
-          location: 'Bole, Addis Ababa',
-          price: 15000,
-          bedrooms: 2,
-          bathrooms: 2,
-        },
-        {
-          id: '2',
-          title: 'Luxury Villa with Garden',
-          location: 'Old Airport, Addis Ababa',
-          price: 35000,
-          bedrooms: 4,
-          bathrooms: 3,
-        },
-      ];
-      
-      setProperties(mockProperties);
+      const q = query(
+        collection(db, "listings"),
+        where("status", "==", "active"),
+        orderBy("createdAt", "desc"),
+        limit(8)
+      );
+      const snapshot = await getDocs(q);
+      const listings = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Listing[];
+      setFeaturedListings(listings);
     } catch (error) {
-      console.error('Failed to load properties:', error);
+      console.error("Error fetching listings:", error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }
+  }, []);
 
-  function handlePropertyPress(property: Property) {
-    console.log('Property selected:', property.id);
-  }
+  useEffect(() => {
+    fetchFeaturedListings();
+  }, [fetchFeaturedListings]);
+
+  // Refresh on focus
+  useFocusEffect(
+    useCallback(() => {
+      if (!loading) {
+        fetchFeaturedListings();
+      }
+    }, [])
+  );
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchFeaturedListings();
+  }, [fetchFeaturedListings]);
+
+  const handleStartHosting = () => {
+    if (!user) {
+      Alert.alert(
+        "Sign In Required",
+        "Please sign in to start hosting your property.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Sign In", onPress: () => navigation.navigate("Login") },
+        ]
+      );
+      return;
+    }
+    // Direct navigation to listing creation - no BecomeAHost gate
+    navigation.navigate("CreateListingStep1", {});
+  };
+
+  const handleBrowseProperties = () => {
+    navigation.navigate("Search", {});
+  };
+
+  const getListingImage = (listing: Listing): string => {
+    if (listing.coverPhoto) return listing.coverPhoto;
+    if (listing.photos && listing.photos.length > 0) return listing.photos[0].url;
+    return "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400";
+  };
+
+  const formatPrice = (price: number, currency: string): string => {
+    if (currency === "ETB") return `ETB ${price.toLocaleString()}`;
+    return `$${price.toLocaleString()}`;
+  };
+
+  const renderListingCard = ({ item }: { item: Listing }) => (
+    <TouchableOpacity
+      style={styles.listingCard}
+      onPress={() => navigation.navigate("PropertyDetails", { listingId: item.id })}
+      activeOpacity={0.9}
+    >
+      <Image
+        source={{ uri: getListingImage(item) }}
+        style={styles.listingImage}
+        resizeMode="cover"
+      />
+      <LinearGradient
+        colors={["transparent", "rgba(0,0,0,0.7)"]}
+        style={styles.listingGradient}
+      />
+      <View style={styles.listingContent}>
+        <View style={styles.listingHeader}>
+          {item.averageRating && (
+            <View style={styles.ratingBadge}>
+              <Ionicons name="star" size={12} color="#FCD34D" />
+              <Text style={styles.ratingText}>{item.averageRating.toFixed(1)}</Text>
+            </View>
+          )}
+        </View>
+        <View style={styles.listingInfo}>
+          <Text style={styles.listingTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={styles.listingLocation} numberOfLines={1}>
+            {item.city}, {item.country}
+          </Text>
+          <Text style={styles.listingPrice}>
+            {formatPrice(item.pricePerNight, item.currency)}
+            <Text style={styles.perNight}> / night</Text>
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="light" />
-      
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#6366F1"
+          />
+        }
+      >
         {/* Hero Section */}
-        <View style={styles.hero}>
-          <View style={styles.heroContent}>
-            <View style={styles.titleContainer}>
-              <Text style={styles.flag}>🇪🇹</Text>
-              <Text style={styles.title}>ENATBET</Text>
-              <Text style={styles.flag}>🇪🇷</Text>
+        <LinearGradient
+          colors={["#7C3AED", "#6366F1", "#4F46E5"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroSection}
+        >
+          <SafeAreaView edges={["top"]}>
+            <View style={styles.heroContent}>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require("../../assets/icon.png")}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text style={styles.appName}>ENATBET</Text>
+              <Text style={styles.tagline}>"Book a home, not just a room!"</Text>
+              <Text style={styles.subtitle}>
+                Connecting Ethiopian & Eritrean diaspora{"\n"}communities worldwide
+              </Text>
+
+              {/* Search Bar */}
+              <TouchableOpacity
+                style={styles.searchBar}
+                onPress={handleBrowseProperties}
+                activeOpacity={0.9}
+              >
+                <Ionicons name="search" size={20} color="#6B7280" />
+                <Text style={styles.searchPlaceholder}>Where are you going?</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.tagline}>
-              "Book a home, not just a room"
-            </Text>
-            <Text style={styles.subtitle}>
-              Connecting Ethiopian & Eritrean diaspora communities worldwide
+          </SafeAreaView>
+        </LinearGradient>
+
+        {/* Welcome Message */}
+        {user && (
+          <View style={styles.welcomeSection}>
+            <Text style={styles.welcomeText}>
+              Welcome back, {user.displayName?.split(" ")[0] || "Guest"}! 👋
             </Text>
           </View>
+        )}
+
+        {/* Featured Listings */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Featured Homes</Text>
+            <TouchableOpacity onPress={handleBrowseProperties}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#6366F1" />
+            </View>
+          ) : featuredListings.length > 0 ? (
+            <FlatList
+              data={featuredListings}
+              renderItem={renderListingCard}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.listingsContainer}
+              snapToInterval={CARD_WIDTH + 16}
+              decelerationRate="fast"
+            />
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateIcon}>🏠</Text>
+              <Text style={styles.emptyStateText}>No listings available yet</Text>
+              <Text style={styles.emptyStateSubtext}>Be the first to list your property!</Text>
+            </View>
+          )}
         </View>
 
-        {/* Features Section */}
-        <View style={styles.featuresSection}>
+        {/* Quick Actions */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Get Started</Text>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={handleBrowseProperties}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.actionIconContainer, { backgroundColor: "#EEF2FF" }]}>
+              <Ionicons name="search" size={24} color="#6366F1" />
+            </View>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Browse Properties</Text>
+              <Text style={styles.actionSubtitle}>Find your perfect stay</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={handleStartHosting}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.actionIconContainer, { backgroundColor: "#FEF3C7" }]}>
+              <Ionicons name="home" size={24} color="#D97706" />
+            </View>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Start Hosting</Text>
+              <Text style={styles.actionSubtitle}>Share your home with the community</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Why Choose Enatbet */}
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Why Choose Enatbet?</Text>
-          
+
           <View style={styles.featuresGrid}>
             <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>🏡</Text>
+              <Text style={styles.featureEmoji}>🏡</Text>
               <Text style={styles.featureTitle}>Community Homes</Text>
-              <Text style={styles.featureDescription}>
+              <Text style={styles.featureSubtitle}>
                 Stay with Ethiopian & Eritrean families worldwide
               </Text>
             </View>
 
             <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>☕</Text>
+              <Text style={styles.featureEmoji}>☕</Text>
               <Text style={styles.featureTitle}>Cultural Experience</Text>
-              <Text style={styles.featureDescription}>
+              <Text style={styles.featureSubtitle}>
                 Enjoy coffee ceremonies and traditional hospitality
               </Text>
             </View>
 
             <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>🤝</Text>
+              <Text style={styles.featureEmoji}>🤝</Text>
               <Text style={styles.featureTitle}>Trusted Network</Text>
-              <Text style={styles.featureDescription}>
+              <Text style={styles.featureSubtitle}>
                 Book with confidence within our community
+              </Text>
+            </View>
+
+            <View style={styles.featureCard}>
+              <Text style={styles.featureEmoji}>💰</Text>
+              <Text style={styles.featureTitle}>Fair Pricing</Text>
+              <Text style={styles.featureSubtitle}>
+                Competitive rates with transparent fees
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Properties Section */}
-        <View style={styles.propertiesSection}>
-          <Text style={styles.sectionTitle}>Featured Properties</Text>
-          <Text style={styles.propertiesCount}>
-            {properties.length} properties available
-          </Text>
-
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#ec4899" />
-              <Text style={styles.loadingText}>Loading properties...</Text>
-            </View>
-          ) : properties.length > 0 ? (
-            properties.map((property) => (
-              <TouchableOpacity
-                key={property.id}
-                style={styles.propertyCard}
-                onPress={() => handlePropertyPress(property)}
-                activeOpacity={0.7}
-              >
-                {property.imageUrl && (
-                  <Image
-                    source={{ uri: property.imageUrl }}
-                    style={styles.propertyImage}
-                    resizeMode="cover"
-                  />
-                )}
-                
-                <View style={styles.propertyContent}>
-                  <Text style={styles.propertyTitle}>{property.title}</Text>
-                  <Text style={styles.propertyLocation}>{property.location}</Text>
-                  
-                  <View style={styles.propertyDetails}>
-                    <Text style={styles.propertySpec}>
-                      🛏️ {property.bedrooms} bed
-                    </Text>
-                    <Text style={styles.propertySpec}>
-                      🚿 {property.bathrooms} bath
-                    </Text>
-                  </View>
-                  
-                  <Text style={styles.propertyPrice}>
-                    {property.price.toLocaleString()} ETB/month
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>
-                No properties available at the moment
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* CTA Section */}
-        <View style={styles.ctaSection}>
-          <Text style={styles.ctaTitle}>
-            Ready to Find Your Home Away From Home?
-          </Text>
-          <Text style={styles.ctaSubtitle}>
-            Join thousands in our global Ethiopian & Eritrean community
-          </Text>
-          <TouchableOpacity style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Find More Homes</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>List Your Home</Text>
-          </TouchableOpacity>
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Image
+            source={require("../../assets/icon.png")}
+            style={styles.footerLogo}
+            resizeMode="contain"
+          />
+          <View style={styles.footerTextRow}>
+            <Text style={styles.footerFlag}>🇪🇹</Text>
+            <Text style={styles.footerAppName}>Enatbet</Text>
+            <Text style={styles.footerFlag}>🇪🇷</Text>
+          </View>
+          <Text style={styles.footerTagline}>Home away from home</Text>
+          <Text style={styles.footerCopyright}>© 2025 Enatbet. All rights reserved.</Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#F9FAFB",
   },
-  hero: {
-    backgroundColor: '#a855f7',
-    paddingVertical: 50,
-    paddingHorizontal: 20,
+  // Hero
+  heroSection: {
+    paddingBottom: 32,
   },
   heroContent: {
-    alignItems: 'center',
+    alignItems: "center",
+    paddingTop: 16,
+    paddingHorizontal: 20,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 12,
+  logoContainer: {
+    width: 100,
+    height: 100,
+    backgroundColor: "#FDF6E3",
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  flag: {
-    fontSize: 40,
+  logo: {
+    width: 80,
+    height: 80,
   },
-  title: {
-    fontSize: 44,
-    fontWeight: 'bold',
-    color: '#ffffff',
+  appName: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    marginTop: 12,
+    letterSpacing: 2,
   },
   tagline: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: '#ffffff',
-    fontStyle: 'italic',
-    marginBottom: 8,
-    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    marginTop: 6,
   },
   subtitle: {
-    fontSize: 15,
-    color: '#ffffff',
-    opacity: 0.9,
-    textAlign: 'center',
-    paddingHorizontal: 20,
-  },
-  featuresSection: {
-    paddingVertical: 40,
-    paddingHorizontal: 20,
-    backgroundColor: '#ffffff',
-  },
-  featuresGrid: {
-    gap: 16,
-  },
-  sectionTitle: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 32,
-    color: '#1f2937',
-  },
-  featureCard: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-  },
-  featureIcon: {
-    fontSize: 42,
-    marginBottom: 12,
-  },
-  featureTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#1f2937',
-  },
-  featureDescription: {
     fontSize: 14,
-    color: '#6b7280',
-    textAlign: 'center',
+    color: "rgba(255,255,255,0.85)",
+    textAlign: "center",
+    marginTop: 6,
+    lineHeight: 20,
   },
-  propertiesSection: {
-    paddingVertical: 40,
-    paddingHorizontal: 20,
-    backgroundColor: '#f9fafb',
-  },
-  propertiesCount: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  loadingContainer: {
-    paddingVertical: 40,
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#6b7280',
-  },
-  propertyCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    marginBottom: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    marginTop: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 30,
+    width: "100%",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 4,
   },
-  propertyImage: {
-    width: '100%',
-    height: 200,
-    backgroundColor: '#e5e7eb',
+  searchPlaceholder: {
+    fontSize: 16,
+    color: "#9CA3AF",
+    marginLeft: 10,
   },
-  propertyContent: {
-    padding: 16,
+  // Welcome
+  welcomeSection: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
-  propertyTitle: {
+  welcomeText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 6,
+    fontWeight: "600",
+    color: "#1F2937",
   },
-  propertyLocation: {
+  // Sections
+  section: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1F2937",
+  },
+  seeAllText: {
+    fontSize: 15,
+    color: "#6366F1",
+    fontWeight: "600",
+  },
+  // Loading
+  loadingContainer: {
+    height: 200,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  // Listings
+  listingsContainer: {
+    paddingRight: 20,
+  },
+  listingCard: {
+    width: CARD_WIDTH,
+    height: 220,
+    borderRadius: 16,
+    marginRight: 16,
+    overflow: "hidden",
+    backgroundColor: "#E5E7EB",
+  },
+  listingImage: {
+    width: "100%",
+    height: "100%",
+  },
+  listingGradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+  },
+  listingContent: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: 14,
+    justifyContent: "space-between",
+  },
+  listingHeader: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  ratingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  ratingText: {
+    fontSize: 13,
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  listingInfo: {
+    gap: 4,
+  },
+  listingTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  listingLocation: {
     fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 12,
+    color: "rgba(255,255,255,0.9)",
   },
-  propertyDetails: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 12,
+  listingPrice: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
-  propertySpec: {
-    fontSize: 14,
-    color: '#6b7280',
+  perNight: {
+    fontSize: 13,
+    fontWeight: "400",
+    color: "rgba(255,255,255,0.9)",
   },
-  propertyPrice: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#ec4899',
-  },
+  // Empty State
   emptyState: {
+    alignItems: "center",
     paddingVertical: 40,
-    alignItems: 'center',
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    marginHorizontal: 4,
+  },
+  emptyStateIcon: {
+    fontSize: 48,
+    marginBottom: 12,
   },
   emptyStateText: {
-    fontSize: 16,
-    color: '#9ca3af',
-    textAlign: 'center',
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#1F2937",
+    marginBottom: 4,
   },
-  ctaSection: {
-    backgroundColor: '#fef3c7',
-    paddingVertical: 40,
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  // Action Cards
+  actionCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  actionIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
+  actionContent: {
+    flex: 1,
+  },
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1F2937",
+  },
+  actionSubtitle: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginTop: 2,
+  },
+  // Features Grid
+  featuresGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  featureCard: {
+    width: (SCREEN_WIDTH - 52) / 2,
+    backgroundColor: "#FFFFFF",
+    padding: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  featureEmoji: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  featureTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1F2937",
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  featureSubtitle: {
+    fontSize: 12,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 16,
+  },
+  // Footer
+  footer: {
+    alignItems: "center",
+    paddingVertical: 32,
     paddingHorizontal: 20,
-    alignItems: 'center',
+    marginTop: 16,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
   },
-  ctaTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'center',
-    color: '#1f2937',
+  footerLogo: {
+    width: 50,
+    height: 50,
+    marginBottom: 8,
   },
-  ctaSubtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    marginBottom: 24,
-    textAlign: 'center',
+  footerTextRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  primaryButton: {
-    backgroundColor: '#ec4899',
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    width: width - 40,
-    marginBottom: 12,
+  footerFlag: {
+    fontSize: 18,
   },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 17,
-    fontWeight: '600',
-    textAlign: 'center',
+  footerAppName: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1F2937",
   },
-  secondaryButton: {
-    backgroundColor: '#1f2937',
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    width: width - 40,
+  footerTagline: {
+    fontSize: 14,
+    color: "#6B7280",
+    fontStyle: "italic",
+    marginTop: 4,
   },
-  secondaryButtonText: {
-    color: '#ffffff',
-    fontSize: 17,
-    fontWeight: '600',
-    textAlign: 'center',
+  footerCopyright: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginTop: 8,
   },
 });

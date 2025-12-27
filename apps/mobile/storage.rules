@@ -1,0 +1,47 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*')
+             && request.resource.size < 5 * 1024 * 1024; // 5MB max
+    }
+    
+    function isValidVideo() {
+      return request.resource.contentType.matches('video/.*')
+             && request.resource.size < 50 * 1024 * 1024; // 50MB max
+    }
+
+    // Profile photos
+    match /users/{userId}/profile/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(userId) && isValidImage();
+    }
+    
+    // Verification selfies (private)
+    match /users/{userId}/verification/{fileName} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) && (isValidImage() || isValidVideo());
+    }
+    
+    // Property images
+    match /listings/{listingId}/{fileName} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidImage();
+    }
+    
+    // Message attachments
+    match /conversations/{conversationId}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidImage();
+    }
+  }
+}

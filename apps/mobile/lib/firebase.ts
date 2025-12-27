@@ -1,6 +1,7 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { initializeAuth, getAuth, getReactNativePersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const firebaseConfig = {
@@ -13,12 +14,26 @@ const firebaseConfig = {
   measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+// Initialize Firebase app
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-const auth = getApps().length === 1 
-  ? initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) })
-  : getAuth(app);
+// Initialize Auth with AsyncStorage persistence - try/catch handles hot reload
+let auth;
+try {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+} catch (error: any) {
+  if (error.code === "auth/already-initialized") {
+    auth = getAuth(app);
+  } else {
+    throw error;
+  }
+}
 
-export { auth };
-export const db = getFirestore(app);
+// Initialize Firestore and Storage
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+export { auth, db, storage };
 export default app;

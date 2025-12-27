@@ -6,9 +6,17 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  transpilePackages: ['@enatbet/firebase', '@enatbet/shared', 'undici'],
+  transpilePackages: ['@enatbet/firebase', '@enatbet/shared'],
   experimental: {
-    serverComponentsExternalPackages: ['firebase-admin', 'undici'],
+    serverComponentsExternalPackages: ['firebase-admin'],
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
 }
 

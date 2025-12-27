@@ -7,13 +7,16 @@ export interface User {
   displayName: string;
   phone?: string;
   photoURL?: string;
+  bio?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
   role: UserRole;
   status: UserStatus;
   stripeAccountId?: string;
   stripeCustomerId?: string;
   isVerified: boolean;
   verificationDocuments?: string[];
-  favorites?: string[]; // Array of listing IDs
+  favorites?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,4 +38,13 @@ export interface CreateUserInput {
   displayName: string;
   phone?: string;
   role?: UserRole;
+}
+
+export interface UpdateUserProfileInput {
+  displayName?: string;
+  phone?: string;
+  bio?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
+  photoURL?: string;
 }

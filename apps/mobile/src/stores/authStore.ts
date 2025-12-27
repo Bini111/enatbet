@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
   updateProfile,
 } from "firebase/auth";
-import { auth } from "../config/firebase";
+import { auth } from "../../lib/firebase";
 import { getUserById } from "@enatbet/firebase";
 
 interface AuthState {

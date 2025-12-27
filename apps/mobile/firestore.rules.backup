@@ -1,0 +1,459 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
+    }
+
+    function isHost() {
+      return isSignedIn() && request.auth.token.role == 'host';
+    }
+
+    function isGuest() {
+      return isSignedIn() && request.auth.token.role == 'guest';
+    }
+
+    function isHostOrAdmin() {
+      return isAdmin() || isHost();
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function hasRequiredFields(requiredFields) {
+      return request.resource.data.keys().hasAll(requiredFields);
+    }
+
+    function validTimestamps() {
+      return request.resource.data.createdAt == request.time &&
+             request.resource.data.updatedAt == request.time;
+    }
+
+    function validUpdateTimestamps() {
+      return request.resource.data.updatedAt == request.time &&
+             request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function validString(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+             request.resource.data[field].size() >= minLen &&
+             request.resource.data[field].size() <= maxLen;
+    }
+
+    function validEmail(email) {
+      return email is string && email.matches('^[^@]+@[^@]+\\.[^@]+$');
+    }
+
+    function validPhone(phone) {
+      return phone is string && phone.size() >= 10 && phone.size() <= 20;
+    }
+
+    // ============================================
+    // USERS COLLECTION
+    // ============================================
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+
+      allow create: if isSignedIn() &&
+                      isOwner(userId) &&
+                      !request.resource.data.keys().hasAny(['role', 'verified', 'isAdmin']) &&
+                      hasRequiredFields(['email', 'createdAt', 'updatedAt']);
+
+      allow update: if isSignedIn() &&
+                      isOwner(userId) &&
+                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'verified', 'isAdmin', 'email']) &&
+                      validUpdateTimestamps();
+
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // LISTINGS COLLECTION
+    // ============================================
+
+    match /listings/{listingId} {
+      function isListingOwner() {
+        return isSignedIn() && resource.data.hostId == request.auth.uid;
+      }
+
+      allow read: if true;
+
+      allow create: if isHostOrAdmin() &&
+                      hasRequiredFields(['title', 'description', 'hostId', 'price', 'location', 'status', 'createdAt', 'updatedAt']) &&
+                      request.resource.data.hostId == request.auth.uid &&
+                      request.resource.data.status == 'pending_approval' &&
+                      request.resource.data.price > 0;
+
+      allow update: if (isListingOwner() || isAdmin()) &&
+                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['hostId', 'createdAt']) &&
+                      validUpdateTimestamps();
+
+      allow delete: if isListingOwner() || isAdmin();
+
+      match /availability/{availabilityId} {
+        allow read: if true;
+        allow create: if isSignedIn() &&
+                        get(/databases/$(database)/documents/listings/$(listingId)).data.hostId == request.auth.uid;
+        allow update: if isSignedIn() &&
+                        get(/databases/$(database)/documents/listings/$(listingId)).data.hostId == request.auth.uid;
+        allow delete: if isSignedIn() &&
+                        (get(/databases/$(database)/documents/listings/$(listingId)).data.hostId == request.auth.uid || isAdmin());
+      }
+
+      match /photos/{photoId} {
+        allow read: if true;
+        allow write: if isSignedIn() &&
+                       (get(/databases/$(database)/documents/listings/$(listingId)).data.hostId == request.auth.uid || isAdmin());
+      }
+    }
+
+    // ============================================
+    // BOOKINGS COLLECTION
+    // ============================================
+
+    match /bookings/{bookingId} {
+      function isBookingHost() {
+        return isSignedIn() && resource.data.hostId == request.auth.uid;
+      }
+
+      function isBookingGuest() {
+        return isSignedIn() && resource.data.guestId == request.auth.uid;
+      }
+
+      function validBookingStatusTransition() {
+        let oldStatus = resource.data.status;
+        let newStatus = request.resource.data.status;
+        return (oldStatus == 'pending' && newStatus in ['confirmed', 'rejected', 'cancelled']) ||
+               (oldStatus == 'confirmed' && newStatus in ['completed', 'cancelled']) ||
+               (oldStatus == 'completed' && newStatus == 'completed') ||
+               (oldStatus == 'cancelled' && newStatus == 'cancelled') ||
+               (oldStatus == 'rejected' && newStatus == 'rejected');
+      }
+
+      function preventSelfBooking() {
+        let listing = get(/databases/$(database)/documents/listings/$(request.resource.data.listingId)).data;
+        return listing.hostId != request.auth.uid;
+      }
+
+      allow read: if isSignedIn() && (isBookingGuest() || isBookingHost() || isAdmin());
+
+      allow create: if isSignedIn() &&
+                      hasRequiredFields(['listingId', 'guestId', 'hostId', 'checkIn', 'checkOut', 'totalPrice', 'status', 'createdAt', 'updatedAt']) &&
+                      request.resource.data.guestId == request.auth.uid &&
+                      request.resource.data.status == 'pending' &&
+                      exists(/databases/$(database)/documents/listings/$(request.resource.data.listingId)) &&
+                      preventSelfBooking() &&
+                      request.resource.data.totalPrice > 0;
+
+      allow update: if (
+                        (isBookingGuest() && validBookingStatusTransition() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])) ||
+                        (isBookingHost() && validBookingStatusTransition()) ||
+                        isAdmin()
+                      ) && validUpdateTimestamps();
+
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // PAYMENTS COLLECTION (Server-side only writes)
+    // ============================================
+
+    match /payments/{paymentId} {
+      allow read: if isSignedIn() &&
+                    (resource.data.userId == request.auth.uid ||
+                     resource.data.hostId == request.auth.uid ||
+                     isAdmin());
+      allow create, update, delete: if false;
+    }
+
+    // ============================================
+    // TRANSACTIONS COLLECTION (Server-side only writes)
+    // ============================================
+
+    match /transactions/{transactionId} {
+      allow read: if isSignedIn() &&
+                    (resource.data.userId == request.auth.uid ||
+                     resource.data.hostId == request.auth.uid ||
+                     isAdmin());
+      allow create, update, delete: if false;
+    }
+
+    // ============================================
+    // REVIEWS COLLECTION
+    // ============================================
+
+    match /reviews/{reviewId} {
+      function isReviewAuthor() {
+        return isSignedIn() && resource.data.reviewerId == request.auth.uid;
+      }
+
+      function validRating() {
+        return request.resource.data.rating >= 1 && request.resource.data.rating <= 5;
+      }
+
+      function validComment() {
+        return request.resource.data.comment is string && request.resource.data.comment.size() >= 10;
+      }
+
+      function bookingCompleted() {
+        return get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.status == 'completed';
+      }
+
+      function isBookingParticipant() {
+        let booking = get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data;
+        return booking.guestId == request.auth.uid || booking.hostId == request.auth.uid;
+      }
+
+      allow read: if true;
+
+      allow create: if isSignedIn() &&
+                      hasRequiredFields(['bookingId', 'listingId', 'reviewerId', 'rating', 'comment', 'createdAt', 'updatedAt']) &&
+                      request.resource.data.reviewerId == request.auth.uid &&
+                      validRating() &&
+                      validComment() &&
+                      exists(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)) &&
+                      bookingCompleted() &&
+                      isBookingParticipant();
+
+      allow update: if (isReviewAuthor() || isAdmin()) &&
+                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['bookingId', 'listingId', 'reviewerId', 'createdAt']) &&
+                      validRating() &&
+                      validComment() &&
+                      validUpdateTimestamps();
+
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // REPORTS COLLECTION
+    // ============================================
+
+    match /reports/{reportId} {
+      allow read: if isAdmin();
+
+      allow create: if isSignedIn() &&
+                      hasRequiredFields(['reporterId', 'type', 'reason', 'description', 'createdAt', 'updatedAt']) &&
+                      request.resource.data.reporterId == request.auth.uid &&
+                      request.resource.data.type in ['listing', 'user', 'booking', 'review', 'message'] &&
+                      validString('description', 10, 2000);
+
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // CONVERSATIONS COLLECTION
+    // ============================================
+
+    match /conversations/{conversationId} {
+      function isParticipant() {
+        return isSignedIn() && request.auth.uid in resource.data.participants;
+      }
+
+      function isNewParticipant() {
+        return isSignedIn() && request.auth.uid in request.resource.data.participants;
+      }
+
+      allow read: if isParticipant();
+
+      allow create: if isSignedIn() &&
+                      isNewParticipant() &&
+                      hasRequiredFields(['participants', 'createdAt', 'updatedAt']) &&
+                      request.resource.data.participants.size() == 2;
+
+      allow update: if isParticipant() &&
+                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['participants', 'createdAt']);
+
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        function parentConversationParticipants() {
+          return get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+        }
+
+        allow read: if isSignedIn() && request.auth.uid in parentConversationParticipants();
+
+        allow create: if isSignedIn() &&
+                        request.auth.uid in parentConversationParticipants() &&
+                        hasRequiredFields(['senderId', 'text', 'createdAt']) &&
+                        request.resource.data.senderId == request.auth.uid &&
+                        validString('text', 1, 2000);
+
+        allow update, delete: if false;
+      }
+    }
+
+    // ============================================
+    // WISHLISTS COLLECTION
+    // ============================================
+
+    match /wishlists/{wishlistId} {
+      function isWishlistOwner() {
+        return isSignedIn() && resource.data.userId == request.auth.uid;
+      }
+
+      allow read: if isSignedIn() &&
+                    (resource.data.userId == request.auth.uid || resource.data.isPrivate == false);
+
+      allow create: if isSignedIn() &&
+                      hasRequiredFields(['userId', 'name', 'listingIds', 'createdAt', 'updatedAt']) &&
+                      request.resource.data.userId == request.auth.uid;
+
+      allow update: if isWishlistOwner() &&
+                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId', 'createdAt']) &&
+                      validUpdateTimestamps();
+
+      allow delete: if isWishlistOwner();
+    }
+
+    // ============================================
+    // NOTIFICATIONS COLLECTION (Read-only for users)
+    // ============================================
+
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      allow update: if isSignedIn() &&
+                      resource.data.userId == request.auth.uid &&
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
+
+      allow create, delete: if false;
+    }
+
+    // ============================================
+    // HOST APPLICATIONS COLLECTION
+    // ============================================
+
+    match /hostApplications/{applicationId} {
+      function validHostApplicationCreate() {
+        let data = request.resource.data;
+        return data.fullName is string && data.fullName.size() >= 2 &&
+               data.email is string && data.email.size() >= 5 &&
+               data.phone is string && data.phone.size() >= 10 &&
+               data.status == 'pending';
+      }
+
+      allow create: if validHostApplicationCreate();
+
+      allow read: if isAdmin() ||
+                    (isSignedIn() && resource.data.userId == request.auth.uid) ||
+                    (isSignedIn() && resource.data.email == request.auth.token.email);
+
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // EVENTS COLLECTION (Community Events)
+    // ============================================
+
+    match /events/{eventId} {
+      allow read: if true;
+      allow create: if isAdmin() &&
+                      hasRequiredFields(['title', 'description', 'date', 'location', 'createdAt', 'updatedAt']);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // VERIFICATIONS COLLECTION
+    // ============================================
+
+    match /verifications/{verificationId} {
+      allow read: if isSignedIn() &&
+                    (resource.data.userId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+                      hasRequiredFields(['userId', 'type', 'status', 'createdAt', 'updatedAt']) &&
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.type in ['phone', 'email', 'id_document', 'address'] &&
+                      request.resource.data.status == 'pending';
+
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // DISPUTES COLLECTION
+    // ============================================
+
+    match /disputes/{disputeId} {
+      function isDisputeParticipant() {
+        return isSignedIn() &&
+               (resource.data.guestId == request.auth.uid || resource.data.hostId == request.auth.uid);
+      }
+
+      allow read: if isDisputeParticipant() || isAdmin();
+
+      allow create: if isSignedIn() &&
+                      hasRequiredFields(['bookingId', 'guestId', 'hostId', 'reason', 'description', 'status', 'createdAt', 'updatedAt']) &&
+                      (request.resource.data.guestId == request.auth.uid || request.resource.data.hostId == request.auth.uid) &&
+                      request.resource.data.status == 'open' &&
+                      request.resource.data.reason in ['payment_issue', 'property_issue', 'host_issue', 'guest_issue', 'cancellation', 'other'] &&
+                      validString('description', 20, 2000) &&
+                      exists(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId));
+
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // PAYOUTS COLLECTION (Server-side only)
+    // ============================================
+
+    match /payouts/{payoutId} {
+      allow read: if isSignedIn() &&
+                    (resource.data.hostId == request.auth.uid || isAdmin());
+      allow create, update, delete: if false;
+    }
+
+    // ============================================
+    // STRIPE ACCOUNTS COLLECTION
+    // ============================================
+
+    match /stripeAccounts/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create, update, delete: if false;
+    }
+
+    // ============================================
+    // SYSTEM STATS COLLECTION (Read-only)
+    // ============================================
+
+    match /stats/{statId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // ============================================
+    // ADMIN COLLECTION
+    // ============================================
+
+    match /admin/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // ============================================
+    // DEFAULT DENY ALL
+    // ============================================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

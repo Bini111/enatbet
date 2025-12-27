@@ -1,14 +1,14 @@
 {
   "cli": {
-    "version": ">= 5.9.0"
+    "version": ">= 5.0.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
-        "simulator": true,
-        "buildConfiguration": "Debug"
+        "simulator": false
       },
       "android": {
         "buildType": "apk"
@@ -17,27 +17,19 @@
     "preview": {
       "distribution": "internal",
       "ios": {
-        "simulator": false,
-        "buildConfiguration": "Release"
+        "simulator": false
       },
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://enatbet.app"
       }
     },
     "production": {
+      "distribution": "store",
       "ios": {
-        "simulator": false,
-        "buildConfiguration": "Release"
+        "simulator": false
       },
       "android": {
         "buildType": "app-bundle"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://enatbet.app",
-        "NODE_ENV": "production"
       }
     }
   },
@@ -45,14 +37,7 @@
     "production": {
       "ios": {
         "appleId": "your-apple-id@email.com",
-        "ascAppId": "your-app-store-connect-id",
-        "appleTeamId": "your-team-id",
-        "sku": "app-enatbet-mobile"
-      },
-      "android": {
-        "track": "production",
-        "releaseStatus": "completed",
-        "changesNotSentForReview": false
+        "ascAppId": "your-app-store-connect-app-id"
       }
     }
   }
