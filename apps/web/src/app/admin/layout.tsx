@@ -2,7 +2,7 @@
 
 import { ReactNode, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Users,
@@ -33,6 +33,18 @@ const navigation = [
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Don't show admin layout on login page
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
+  const handleLogout = () => {
+    // Clear admin session cookie
+    document.cookie = 'adminSession=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    router.push('/');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -72,7 +84,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-primary-50 text-primary-600'
+                      ? 'bg-pink-50 text-pink-600'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
@@ -84,7 +96,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="p-4 border-t border-gray-200">
-            <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
+            <button 
+              onClick={handleLogout}
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+            >
               <LogOut className="w-5 h-5" />
               Logout
             </button>
