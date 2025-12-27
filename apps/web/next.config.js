@@ -8,7 +8,13 @@ const nextConfig = {
   },
   transpilePackages: ['@enatbet/shared'],
   experimental: {
-    serverComponentsExternalPackages: ['firebase-admin', 'undici', '@firebase/auth'],
+    serverComponentsExternalPackages: ['firebase-admin', 'undici', '@firebase/auth', '@enatbet/firebase'],
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = [...(config.externals || []), 'undici'];
+    }
+    return config;
   },
   images: {
     remotePatterns: [
